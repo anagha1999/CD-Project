@@ -101,10 +101,11 @@
 		
 	void modifyRecordID(const char *type, const char *name, int lineNo, int scope)
 	{
+		int check_error = 0;
 		int i =0;
 		int index = scopeBasedTableSearch(scope);
-		//printf("No Of Elems : %d\n", symbolTables[index].noOfElems);
-		if(index==0)
+		printf("No Of Elems : %d\n", symbolTables[index].noOfElems);
+		if(index==0) //WHEN is index actuallly =0? when you reach the outer-most scope 
 		{
 			for(i=0; i<symbolTables[index].noOfElems; i++)
 			{
@@ -116,7 +117,9 @@
 				}	
 			}
 			printf("Identifier '%s' at line %d Not Declared\n", name, yylineno);
-			exit(1);
+			//printSTable();
+			check_error =1;
+			//exit(1);
 		}
 		
 		for(i=0; i<symbolTables[index].noOfElems; i++)
@@ -137,8 +140,8 @@
 		int FScope = power(scope, arrayScope[scope]);
 		int index = scopeBasedTableSearch(FScope);
 		int recordIndex = searchRecordInScope(type, name, index);
-		//printf("rIndex : %d, Name : %s\n", recordIndex, name);
-		if(recordIndex==-1)
+		printf("rIndex : %d, Name : %s\n", recordIndex, name);
+		if(recordIndex==-1) //record doesnt exist in the scope
 		{
 			
 			symbolTables[index].Elements[symbolTables[index].noOfElems].type = (char*)calloc(30, sizeof(char));
@@ -176,13 +179,13 @@
 				else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 				{
 					printf("Identifier '%s' at line %d Not Indexable\n", name, yylineno);
-					exit(1);
+					//exit(1);
 
 				}
 
 			}
-			printf("Identifier '%s' at lin.,e %d Not Declared as an Indexable Type\n", name, yylineno);
-			exit(1);
+			printf("Identifier '%s' at line %d Not Declared as an Indexable Type\n", name, yylineno);
+			//exit(1);
 		}
 		
 		for(i=0; i<symbolTables[index].noOfElems; i++)
@@ -196,7 +199,7 @@
 			else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 			{
 				printf("Identifier '%s' at line %d Not Indexable\n", name, yylineno);
-				exit(1);
+				//exit(1);
 
 			}
 		}
@@ -303,13 +306,16 @@ func_call : T_ID T_OP args_list T_CP ;
 
 void yyerror(const char *msg)
 {
+	//printSTable();
+	printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
 	exit(0);
 }
 
-int main()
+/*int main()
 {
 	//printf("Enter the Expression\n");
+	//printSTable();
 	yyparse();
 	return 0;
-}
+}*/

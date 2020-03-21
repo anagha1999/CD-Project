@@ -1,15 +1,15 @@
 %{
-	#include <string.h>
+#include <string.h>
 	#include "y.tab.h"
 	#define stack_size 100
 	#define DEBUG 1
 	
 	int yycolumn = 1;
 	int startFlag = 1;
-	
+
 	#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno; 		\
     yylloc.first_column = yycolumn; yylloc.last_column = yycolumn + yyleng - 1; 	\
-    yycolumn += yyleng;												
+    yycolumn += yyleng;	
     
  	static int sp=0, stack [stack_size];
  	
@@ -61,8 +61,7 @@
 		}
 		return tab_count;
 	}	
- 	int depth = 1;
- 		
+ 	int depth = 1; 
 %}
 %option yylineno
 whitespace [ ]
@@ -95,7 +94,6 @@ Multiline_comment \'\'\'.+\'\'\'
 			}
 			
 		}
-
 "import" {debug("IMPT"); return T_Import;}
 "print"  {debug("Print"); return T_Print;}
 "len"	{debug("len"); return T_LEN;}
@@ -137,9 +135,16 @@ Multiline_comment \'\'\'.+\'\'\'
 [_a-zA-Z][_a-zA-Z0-9]* {yylval.text = strdup(yytext); debug(yylval.text); return T_ID;}
 \"([^\"\n])*\" {yylval.text = strdup(yytext); debug("String"); return T_String;}
 \'([^\'\n])*\' {yylval.text = strdup(yytext); debug("String"); return T_String;}
-"#"([a-z]|[0-9]|[A-Z]|" ")* {}
+#(.*)\n ;
 {whitespace} {} 
 "\n" {yycolumn=1; debug("NL"); return T_NL;}
 <<EOF>> {debug("EOF"); return T_EndOfFile;}
-
-%%
+%% 
+  
+int main()
+{
+	yyparse();
+	yylex();
+	
+	return 0;
+}
