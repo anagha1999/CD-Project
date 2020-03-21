@@ -1,5 +1,7 @@
 import hello
-#hello
+'''
+hello
+'''
 a=5
 print("life sucks")
 def func():

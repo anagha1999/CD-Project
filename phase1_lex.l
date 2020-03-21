@@ -65,7 +65,10 @@
 %}
 %option yylineno
 whitespace [ ]
-Multiline_comment \'\'\'.+\'\'\'
+start \'\'\' 
+
+
+Multiline_comment \'\'\'[\n].+[\n]\'\'\'\n
 %%
 
 [\t]*		{
@@ -136,6 +139,8 @@ Multiline_comment \'\'\'.+\'\'\'
 \"([^\"\n])*\" {yylval.text = strdup(yytext); debug("String"); return T_String;}
 \'([^\'\n])*\' {yylval.text = strdup(yytext); debug("String"); return T_String;}
 #(.*)\n ;
+{start}.*{start}\n ; 
+{Multiline_comment} ;
 {whitespace} {} 
 "\n" {yycolumn=1; debug("NL"); return T_NL;}
 <<EOF>> {debug("EOF"); return T_EndOfFile;}
