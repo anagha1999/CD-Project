@@ -1,4 +1,5 @@
 %{
+	#include <math.h>
 #include <string.h>
 	#include "y.tab.h"
 	#define stack_size 100

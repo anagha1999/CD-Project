@@ -2129,10 +2129,3 @@ void yyerror(const char *msg)
 	exit(0);
 }
 
-/*int main()
-{
-	//printf("Enter the Expression\n");
-	//printSTable();
-	yyparse();
-	return 0;
-}*/
