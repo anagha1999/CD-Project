@@ -545,8 +545,8 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "phase1_lex.l"
-#line 2 "phase1_lex.l"
+#line 1 "code.l"
+#line 2 "code.l"
 	#include <math.h>
 #include <string.h>
 	#include "y.tab.h"
@@ -829,7 +829,7 @@ YY_DECL
 		}
 
 	{
-#line 73 "phase1_lex.l"
+#line 73 "code.l"
 
 
 #line 836 "lex.yy.c"
@@ -901,7 +901,7 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 75 "phase1_lex.l"
+#line 75 "code.l"
 {
 			depth = indent_depth(yytext);
 			//printf("Depth : %d ",  depth);
@@ -931,245 +931,245 @@ YY_RULE_SETUP
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 101 "phase1_lex.l"
+#line 101 "code.l"
 {debug("IMPT"); return T_Import;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 102 "phase1_lex.l"
+#line 102 "code.l"
 {debug("Print"); return T_Print;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 103 "phase1_lex.l"
+#line 103 "code.l"
 {debug("len"); return T_LEN;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 104 "phase1_lex.l"
+#line 104 "code.l"
 {debug("for"); return T_For;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 105 "phase1_lex.l"
+#line 105 "code.l"
 {debug("in"); return T_IN;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 106 "phase1_lex.l"
+#line 106 "code.l"
 {debug("Pass"); return T_Pass;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 107 "phase1_lex.l"
+#line 107 "code.l"
 {debug("If"); return T_If;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 108 "phase1_lex.l"
+#line 108 "code.l"
 {debug("While"); return T_While;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 109 "phase1_lex.l"
+#line 109 "code.l"
 {debug("Break"); return T_Break;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 110 "phase1_lex.l"
+#line 110 "code.l"
 {debug("And"); return T_And;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 111 "phase1_lex.l"
+#line 111 "code.l"
 {debug("Or"); return T_Or;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 112 "phase1_lex.l"
+#line 112 "code.l"
 {debug("Not"); return T_Not;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 113 "phase1_lex.l"
+#line 113 "code.l"
 {debug("Elif"); return T_Elif;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 114 "phase1_lex.l"
+#line 114 "code.l"
 {debug("Else"); return T_Else;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 115 "phase1_lex.l"
+#line 115 "code.l"
 {debug("Def"); return T_Def;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 116 "phase1_lex.l"
+#line 116 "code.l"
 {debug("Return"); return T_Return;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 117 "phase1_lex.l"
+#line 117 "code.l"
 {debug("Cln"); return T_Cln;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 118 "phase1_lex.l"
+#line 118 "code.l"
 {debug("GT"); return T_GT;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 119 "phase1_lex.l"
+#line 119 "code.l"
 {debug("LT"); return T_LT;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 120 "phase1_lex.l"
+#line 120 "code.l"
 {debug("EGT"); return T_EGT;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 121 "phase1_lex.l"
+#line 121 "code.l"
 {debug("ELT"); return T_ELT;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 122 "phase1_lex.l"
+#line 122 "code.l"
 {debug("EQ"); return T_EQ;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 123 "phase1_lex.l"
+#line 123 "code.l"
 {debug("NEQ"); return T_NEQ;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 124 "phase1_lex.l"
+#line 124 "code.l"
 {debug("True"); return T_True;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 125 "phase1_lex.l"
+#line 125 "code.l"
 {debug("False"); return T_False;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 126 "phase1_lex.l"
+#line 126 "code.l"
 {debug("PL"); return T_PL;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 127 "phase1_lex.l"
+#line 127 "code.l"
 {debug("MN"); return T_MN;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 128 "phase1_lex.l"
+#line 128 "code.l"
 {debug("ML"); return T_ML;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 129 "phase1_lex.l"
+#line 129 "code.l"
 {debug("DV"); return T_DV;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 130 "phase1_lex.l"
+#line 130 "code.l"
 { debug("OP"); return T_OP;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 131 "phase1_lex.l"
+#line 131 "code.l"
 {debug("CP"); return T_CP;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 132 "phase1_lex.l"
+#line 132 "code.l"
 {debug("OB"); return T_OB;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 133 "phase1_lex.l"
+#line 133 "code.l"
 {debug("CB"); return T_CB;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 134 "phase1_lex.l"
+#line 134 "code.l"
 {debug("Comma"); return T_Comma;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 135 "phase1_lex.l"
+#line 135 "code.l"
 {debug("EQL"); return T_EQL;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 136 "phase1_lex.l"
+#line 136 "code.l"
 {debug("range"); return T_Range;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 137 "phase1_lex.l"
+#line 137 "code.l"
 {debug("List"); return T_List;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 138 "phase1_lex.l"
+#line 138 "code.l"
 {yylval.text = strdup(yytext); debug("Number"); return T_Number;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 139 "phase1_lex.l"
+#line 139 "code.l"
 {yylval.text = strdup(yytext); debug(yylval.text); return T_ID;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 140 "phase1_lex.l"
+#line 140 "code.l"
 {yylval.text = strdup(yytext); debug("String"); return T_String;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 141 "phase1_lex.l"
+#line 141 "code.l"
 {yylval.text = strdup(yytext); debug("String"); return T_String;}
 	YY_BREAK
 case 43:
 /* rule 43 can match eol */
 YY_RULE_SETUP
-#line 142 "phase1_lex.l"
+#line 142 "code.l"
 ;
 	YY_BREAK
 case 44:
 /* rule 44 can match eol */
 YY_RULE_SETUP
-#line 143 "phase1_lex.l"
+#line 143 "code.l"
 ; 
 	YY_BREAK
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 144 "phase1_lex.l"
+#line 144 "code.l"
 ;
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 145 "phase1_lex.l"
+#line 145 "code.l"
 {} 
 	YY_BREAK
 case 47:
 /* rule 47 can match eol */
 YY_RULE_SETUP
-#line 146 "phase1_lex.l"
+#line 146 "code.l"
 {yycolumn=1; debug("NL"); return T_NL;}
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
-#line 147 "phase1_lex.l"
+#line 147 "code.l"
 {debug("EOF"); return T_EndOfFile;}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 148 "phase1_lex.l"
+#line 148 "code.l"
 ECHO;
 	YY_BREAK
 #line 1176 "lex.yy.c"
@@ -2187,7 +2187,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 148 "phase1_lex.l"
+#line 148 "code.l"
 
   
 int main()
