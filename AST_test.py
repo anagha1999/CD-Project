@@ -1,3 +1,4 @@
-a = -5
-b = 6
-c=7
+import helloWorld
+print("alohomora!")
+a=3+5*2/6
+pass

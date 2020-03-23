@@ -324,9 +324,11 @@
 
 %token T_EndOfFile  T_Number   T_Cln T_NL  T_IN T_NEQ T_EQ T_GT T_LT T_EGT T_ELT T_Or T_And  ID ND DD T_String Trip_Quote  T_Import   T_MN T_PL T_DV T_ML T_OP T_CP T_OB T_CB T_Def T_Comma T_Range T_List
 %token <text> T_ID T_EQL T_LEN T_True T_False T_Not T_Pass T_Break T_Return T_Print T_If T_Elif T_Else T_For T_While
-%right T_EQL                                       
 %left T_PL T_MN
 %left T_ML T_DV
+%left T_OP T_CP
+%right T_EQL                                       
+
 %nonassoc T_If
 %nonassoc T_Elif
 %nonassoc T_Else
@@ -337,34 +339,44 @@
 %%
 StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); printf("\n\nAST:\n\n"); AST_print($2);   printSTable(); freeAll(); exit(0);} ;
 
-constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);}| T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);};
+constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
+					  $$ = make_leaf($<text>1);}
+		 | T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
+		 			  $$ = make_leaf($<text>1);};
 
-term : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope);} | constant | list_index;
+term : T_ID {$$=make_leaf($1);modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope);} 
+	   | constant {$$=$1;} 
+	   | list_index{$$=$1;};
 
-list_index : T_ID T_OB T_Number T_CB {checkList($<text>1, @1.first_line, currentScope);};
+list_index : T_ID T_OB T_Number T_CB {
+									  checkList($<text>1, @1.first_line, currentScope);
+									  $$ = make_node("ListIndex", make_leaf($<text>1), $3);
+									  };
 
-StartParse : finalStatements T_NL {resetDepth();} StartParse {printf("Inside StartParse->finalStatements NL\n"); $$ = make_node("Start", $1, $4);} | finalStatements {printf("Inside StartParse->finalStatements\n");};
+StartParse : T_NL StartParse {$$=$2;}
+			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start", $1, $4);} 
+			| finalStatements {$$=$1;};
 
-basic_stmt : pass_stmt 
-			| break_stmt 
-			| import_stmt 
-			| assign_stmt {printf("Inside basic_stmt->assign_stmt\n"); $$=$1;} 
-			| arith_exp {printf("Inside basic_stmt->arith_exp\n"); $$=$1;} 
+basic_stmt : pass_stmt {$$=$1;} 
+			| break_stmt {$$=$1;} 
+			| import_stmt {$$=$1;} 
+			| assign_stmt {$$=$1;} 
+			| arith_exp {$$=$1;} 
 			| bool_exp {$$=make_node("assign_stat",$1,NULL);} 
-			| print_stmt 
-			| return_stmt 
+			| print_stmt {$$=$1;}
+			| return_stmt {$$=$1;}
 			| range_stmt ; 
-arith_exp :  term {$$=$1;}
- | arith_exp  T_PL  arith_exp {$$ = make_node("+",$1, $3);}
- | arith_exp  T_MN  arith_exp {$$ = make_node("-",$1, $3);}
- | arith_exp  T_ML  arith_exp {$$ = make_node("/",$1, $3);}
- | arith_exp  T_DV  arith_exp {$$ = make_node("*",$1, $3);}
- | T_MN term {$$ = make_node("temp", make_leaf("-"), $2);}
- |T_OP arith_exp T_CP {$$=$2;};
+arith_exp :  arith_exp  T_PL  arith_exp {$$ = make_node("+",$1, $3);}
+			| arith_exp  T_MN  arith_exp {$$ = make_node("-",$1, $3);}
+			| arith_exp T_ML  arith_exp {$$ = make_node("/",$1, $3);}
+ 			| arith_exp  T_DV  arith_exp {$$ = make_node("*",$1, $3);}
+ 			| term {$$=$1;}
+			| T_MN term {$$ = make_node("temp", make_leaf("-"), $2);}
+ 			| T_OP arith_exp T_CP {$$=$2;};
 
 		    
-range_stmt: T_Range T_OP T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}|T_Range T_OP T_Number T_Comma T_Number 
-T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
+range_stmt: T_Range T_OP T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
+			|T_Range T_OP T_Number T_Comma T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
 list_stmt:T_ID T_IN args_list{$$ = make_node("In", make_leaf($1), $3); insertRecord("Identifier", $<text>1, @1.first_line, currentScope);};
 len_stmt:T_ID T_IN T_LEN T_OP args_list T_CP {$$ = make_node("In", make_leaf($1), make_leaf($3));
 insertRecord("Identifier", $<text>1, @1.first_line, currentScope);};
@@ -382,10 +394,11 @@ bool_term : bool_factor
 			| arith_exp T_EQ arith_exp | T_True {$$=make_leaf($1);}| T_False {$$=make_leaf($1);};
 bool_factor : T_Not bool_factor {$$=make_node($1, $2, NULL);}| T_OP bool_exp T_CP{$$=$2;};
 
-import_stmt : T_Import T_ID {insertRecord("PackageName", $<text>2, @2.first_line, currentScope);};
-pass_stmt : T_Pass {$$=make_leaf($1);};
-break_stmt : T_Break {$$=make_leaf($1);};
-return_stmt : T_Return {$1=make_leaf("Return");}; 
+import_stmt : T_Import T_ID {insertRecord("PackageName", $<text>2, @2.first_line, currentScope); 
+							  $$ = make_node("import_stmt", make_leaf("import"), $<text>2 );};
+pass_stmt : T_Pass {$$=make_leaf("pass");};
+break_stmt : T_Break {$$=make_leaf("break");};
+return_stmt : T_Return {$1=make_leaf("return");}; 
 
 assign_stmt : T_ID T_EQL arith_exp 
 			{
@@ -397,7 +410,7 @@ assign_stmt : T_ID T_EQL arith_exp
 			 |T_ID  T_EQL func_call {insertRecord("Identifier", $<text>1, @1.first_line, currentScope);} 
 			 |T_ID T_EQL T_OB T_CB {insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);} ;
 	      
-print_stmt : T_Print T_OP T_String T_CP {$$=make_leaf($1);};
+print_stmt : T_Print T_OP T_String T_CP {$$=make_node("print_stmt", $1, $<text>3);};
 
 finalStatements : basic_stmt 
 				| cmpd_stmt 
