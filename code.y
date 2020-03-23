@@ -335,7 +335,7 @@
 
 
 %%
-StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); $$ = make_leaf($2); $$=make_node("Main",$<node>1,$2);printf("\n\nAST:\n\n"); AST_print($<node>1); printSTable(); freeAll(); exit(0);} ;
+StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); printf("\n\nAST:\n\n"); AST_print($2);   printSTable(); freeAll(); exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);}| T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);};
 
@@ -343,7 +343,7 @@ term : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope)
 
 list_index : T_ID T_OB T_Number T_CB {checkList($<text>1, @1.first_line, currentScope);};
 
-StartParse : finalStatements T_NL {resetDepth();} StartParse | finalStatements;
+StartParse : finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("NewLine", $1, $4);} | finalStatements;
 
 basic_stmt : pass_stmt 
 			| break_stmt 
