@@ -19,7 +19,7 @@
  		#ifdef DEBUG
  		if(startFlag)
  		{
- 			printf("1 ");
+ 			printf("---------------------------------Token Sequence--------------------------\n1 ");
  			startFlag=0;
  		}
  		if(strcmp(X, "NL")==0)

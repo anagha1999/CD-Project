@@ -2,7 +2,7 @@
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
-	
+	#include <stdarg.h>
 	extern int yylineno;
 	extern int depth;
 	extern int top();
@@ -11,8 +11,8 @@
 	
 	int *arrayScope = NULL;
 
-	typedef struct AST{
-	char lexeme[100];
+	typedef struct AST
+	{ char lexeme[100];
 	int NumChild;
 	struct AST **child;
 	}AST_node;
@@ -110,7 +110,7 @@
 		int check_error = 0;
 		int i =0;
 		int index = scopeBasedTableSearch(scope);
-		printf("No Of Elems : %d\n", symbolTables[index].noOfElems);
+		//printf("No Of Elems : %d\n", symbolTables[index].noOfElems);
 		if(index==0) //WHEN is index actuallly =0? when you reach the outer-most scope 
 		{
 			for(i=0; i<symbolTables[index].noOfElems; i++)
@@ -122,7 +122,7 @@
 					return;
 				}	
 			}
-			printf("Identifier '%s' at line %d Not Declared\n", name, yylineno);
+			//printf("Identifier '%s' at line %d Not Declared\n", name, yylineno);
 			//printSTable();
 			check_error =1;
 			//exit(1);
@@ -146,7 +146,7 @@
 		int FScope = power(scope, arrayScope[scope]);
 		int index = scopeBasedTableSearch(FScope);
 		int recordIndex = searchRecordInScope(type, name, index);
-		printf("rIndex : %d, Name : %s\n", recordIndex, name);
+		//printf("rIndex : %d, Name : %s\n", recordIndex, name);
 		if(recordIndex==-1) //record doesnt exist in the scope
 		{
 			
@@ -243,9 +243,8 @@
 		}
 		free(symbolTables);
 	}
+
 	//Functions for AST
-
-
 	struct AST* make_for_node(char* root, AST_node* child1, AST_node* child2, AST_node* child3, AST_node* child4);
 	struct AST * make_node(char*, AST_node*, AST_node*);
 	struct AST* make_leaf(char* root);
@@ -254,8 +253,9 @@
 	void AST_print(struct AST *t)
 	{
 		static int ctr=0;
-		//printf("inside print tree\n");
+		//printf("\ninside print tree\n");
 		int i;
+		//printf("Current node = %s\n", t->lexeme);
 		if(t->NumChild==0) 
 			return;
 
@@ -264,26 +264,28 @@
 		for(i=0;i<t2->NumChild;++i) 
 		{
 			printf("%s ",t2->child[i]->lexeme);
+			
 		}
 		for(i=0;i<t2->NumChild;++i)
 		{
 			AST_print(t->child[i]);
 		}
 
-		
+				
 	}
 
 
 
 	struct AST* make_node(char* root, AST_node* child1, AST_node* child2)
 	{
-		//printf("Creating new node\n");
+		printf("Creating new node\n");
 		struct AST * node = (struct AST*)malloc(sizeof(struct AST));
 		node->child = (struct AST**)malloc(2*sizeof(struct AST *));
 		node->NumChild = 2;//
 		strcpy(node->lexeme,root);
-		//printf("Copied lexeme\n");
-		//printf("%s\n",node->lexeme);
+		printf("Copied lexeme\n");
+		printf("%s\n",node->lexeme);
+		printf("Children = %s  %s\n", child1->lexeme, child2->lexeme);
 		node->child[0] = child1;
 		node->child[1] = child2;
 		return node;
@@ -320,9 +322,9 @@
 %locations
 
 %union { char *text; int depth; struct AST *node; };
-%type <node> StartParse StartDebugger  args_list start_suite suite end_suite func_call finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor range_stmt list_stmt len_stmt for_stmt
+%type <node> StartParse StartDebugger  args_list start_suite suite end_suite func_call finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor range_stmt for_stmt
 
-%token T_EndOfFile  T_Number   T_Cln T_NL  T_IN T_NEQ T_EQ T_GT T_LT T_EGT T_ELT T_Or T_And  ID ND DD T_String Trip_Quote  T_Import   T_MN T_PL T_DV T_ML T_OP T_CP T_OB T_CB T_Def T_Comma T_Range T_List
+%token T_EndOfFile  T_Number  T_Cln T_NL  T_IN T_NEQ T_EQ T_GT T_LT T_EGT T_ELT T_Or T_And  ID ND DD T_String Trip_Quote  T_Import   T_MN T_PL T_DV T_ML T_OP T_CP T_OB T_CB T_Def T_Comma T_Range T_List
 %token <text> T_ID T_EQL T_LEN T_True T_False T_Not T_Pass T_Break T_Return T_Print T_If T_Elif T_Else T_For T_While
 %left T_PL T_MN
 %left T_ML T_DV
@@ -337,62 +339,70 @@
  
 
 %%
-StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); printf("\n\nAST:\n\n"); AST_print($2);   printSTable(); freeAll(); exit(0);} ;
+StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); 
+printf("\n\nAST:\n\n"); AST_print($2);   
+printSTable(); freeAll(); exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
 					  $$ = make_leaf($<text>1);}
 		 | T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
 		 			  $$ = make_leaf($<text>1);};
 
-term : T_ID {$$=make_leaf($1);modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope);} 
-	   | constant {$$=$1;} 
+term : T_ID {printf("\nterm-> T_ID\n"); 
+			$$=make_leaf($1);
+			modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope);} 
+	   | constant {printf("\nterm-> constant\n"); $$=$1;} 
 	   | list_index{$$=$1;};
 
 list_index : T_ID T_OB T_Number T_CB {
 									  checkList($<text>1, @1.first_line, currentScope);
-									  $$ = make_node("ListIndex", make_leaf($<text>1), $3);
+									  $$ = make_node("ListIndex", make_leaf($<text>1), $<text>3);
 									  };
 
 StartParse : T_NL StartParse {$$=$2;}
 			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start", $1, $4);} 
-			| finalStatements {$$=$1;};
+			| finalStatements T_NL {$$=$1;};
 
 basic_stmt : pass_stmt {$$=$1;} 
 			| break_stmt {$$=$1;} 
 			| import_stmt {$$=$1;} 
 			| assign_stmt {$$=$1;} 
 			| arith_exp {$$=$1;} 
-			| bool_exp {$$=make_node("assign_stat",$1,NULL);} 
+			| bool_exp {$$=$1;} 
 			| print_stmt {$$=$1;}
 			| return_stmt {$$=$1;}
 			| range_stmt ; 
-arith_exp :  arith_exp  T_PL  arith_exp {$$ = make_node("+",$1, $3);}
+
+arith_exp :  term {printf("\narith_exp->term\n"); $$=$1;}
+			| arith_exp  T_PL  arith_exp {$$ = make_node("+",$1, $3);}
 			| arith_exp  T_MN  arith_exp {$$ = make_node("-",$1, $3);}
-			| arith_exp T_ML  arith_exp {$$ = make_node("/",$1, $3);}
+			| arith_exp  T_ML  arith_exp {$$ = make_node("/",$1, $3);}
  			| arith_exp  T_DV  arith_exp {$$ = make_node("*",$1, $3);}
- 			| term {$$=$1;}
-			| T_MN term {$$ = make_node("temp", make_leaf("-"), $2);}
+ 			| T_MN term {$$ = make_node("temp", make_leaf("-"), $2);}
  			| T_OP arith_exp T_CP {$$=$2;};
 
 		    
 range_stmt: T_Range T_OP T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
 			|T_Range T_OP T_Number T_Comma T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
-list_stmt:T_ID T_IN args_list{$$ = make_node("In", make_leaf($1), $3); insertRecord("Identifier", $<text>1, @1.first_line, currentScope);};
-len_stmt:T_ID T_IN T_LEN T_OP args_list T_CP {$$ = make_node("In", make_leaf($1), make_leaf($3));
-insertRecord("Identifier", $<text>1, @1.first_line, currentScope);};
-bool_exp : bool_term T_Or bool_term {$$ = make_node("OR",  $1, $3);}
-		   | arith_exp T_LT arith_exp 
-		   | arith_exp T_GT arith_exp 
-		   | arith_exp T_ELT arith_exp 
-		   | arith_exp T_EGT arith_exp 
-		   | T_ID T_IN range_stmt {$$ = make_node("In",  make_leaf($1), $3);}
-		   | list_stmt  {$$ = $1;}
-		   |len_stmt {$$ = $1;}
-		   |bool_term T_And bool_factor; 
-bool_term : bool_factor 
 
-			| arith_exp T_EQ arith_exp | T_True {$$=make_leaf($1);}| T_False {$$=make_leaf($1);};
-bool_factor : T_Not bool_factor {$$=make_node($1, $2, NULL);}| T_OP bool_exp T_CP{$$=$2;};
+
+bool_exp : bool_term T_Or bool_term {$$ = make_node("or", $1, $3);}
+         | arith_exp T_LT arith_exp {$$ = make_node("<", $1, $3);}
+         | bool_term T_And bool_term {$$ = make_node("and", $1, $3);}
+         | arith_exp T_GT arith_exp {$$ = make_node(">",$1, $3);}
+         | arith_exp T_ELT arith_exp {$$ = make_node("<=", $1, $3);}
+         | arith_exp T_EGT arith_exp {$$ = make_node(">=",$1, $3);}
+         | arith_exp T_IN T_ID {checkList($<text>3, @3.first_line, currentScope); 
+         $$ = make_node("in", $1, make_leaf("$<text>3"));}
+         | bool_term {$$=$1;}; 
+
+bool_term : bool_factor {$$ = $1;}
+          | arith_exp T_EQ arith_exp {$$ = make_node("==", $1, $3);}
+          | T_True {insertRecord("Constant", "True", @1.first_line, currentScope); $$ = make_leaf("True");}
+          | T_False {insertRecord("Constant", "False", @1.first_line, currentScope); $$ = make_leaf("False");}; 
+          
+bool_factor : T_Not bool_factor {$$ = make_node("!", make_leaf("end"), $2);}
+            | T_OP bool_exp T_CP {$$ = $2;}; 
 
 import_stmt : T_Import T_ID {insertRecord("PackageName", $<text>2, @2.first_line, currentScope); 
 							  $$ = make_node("import_stmt", make_leaf("import"), $<text>2 );};
@@ -416,24 +426,32 @@ finalStatements : basic_stmt
 				| cmpd_stmt 
 				| func_def ;
 
-cmpd_stmt : if_stmt | while_stmt| for_stmt ;
+cmpd_stmt : if_stmt {$$ = $1;} 
+			| while_stmt {$$ = $1;}
+			| for_stmt {$$ = $1;};
 
 
-if_stmt : T_If bool_exp T_Cln start_suite {$$= make_node($1, $2, $4);}  
-		| T_If bool_exp T_Cln start_suite elif_stmts {$$= make_node($1, make_node($1, $2, $4), $5);}  ;
-elif_stmts : else_stmt | T_Elif bool_exp T_Cln start_suite elif_stmts {$$ = make_for_node($1, $2, $4, $5, NULL);} ;
-else_stmt : T_Else T_Cln start_suite {$$ = make_node($1, $3, NULL);} ;
+if_stmt : T_If bool_exp T_Cln start_suite {$$= make_node("IF", $2, $4);}  
+		| T_If bool_exp T_Cln start_suite elif_stmts {$$= make_node("IF-ELIF", make_node("IF", $2, $4), $5);}  ;
+
+
+elif_stmts : else_stmt{$$= $1;} 
+			| T_Elif bool_exp T_Cln start_suite elif_stmts {$$ = make_for_node("ELIF", $2, $4, $5, make_leaf("NULL"));} ;
+
+else_stmt : T_Else T_Cln start_suite {printf("\nIn Else rule\n"); $$ = make_node("ELSE", $3, make_leaf("NULL"));} ;
 for_stmt: T_For bool_exp T_Cln start_suite {$$ =make_node($1, $2, $4);};
 while_stmt : T_While bool_exp T_Cln start_suite {$$ =make_node($1, $2, $4);}; 
 
-start_suite : basic_stmt | T_NL ID { initNewTable($<depth>2); updateCScope($<depth>2);} finalStatements suite {make_node("start_suite",  $4, $5);};
+start_suite : basic_stmt {printf("\nIn start_suite->basic_stmt");$$=$1;} 
+			| T_NL ID { initNewTable($<depth>2); updateCScope($<depth>2);} finalStatements suite {make_node("start_suite",  $4, $5);};
 suite : T_NL ND finalStatements suite {$$ = make_node("Next", $3, $4);}
 		| T_NL end_suite {$$ = $2;};
-end_suite : DD {updateCScope($<depth>1);} finalStatements {$$ = make_node("EndBlock", $3, NULL);}
-		|{$$ = make_leaf("EndBlock");};
+end_suite : DD {updateCScope($<depth>1);} finalStatements {printf("\nend_suite->finalStatements"); $$ = make_node("EndBlock", $3, make_leaf("NULL"));}
+		|{$$ = make_leaf("EndBlock"); resetDepth();};
 
-args_list : T_ID T_Comma args_list {$$ = make_leaf($3);}| T_ID {$$ = make_leaf($1);} | {$$ = make_leaf("none");};
-func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args_list T_CP T_Cln start_suite {$$ = make_node($2, $5, $8);};
+args_list : T_ID T_Comma args_list {$$ = make_leaf($3);}
+		| T_ID {$$ = make_leaf($1);} | {$$ = make_leaf("none");};
+func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args_list T_CP T_Cln start_suite {$$ = make_node("Func_def", $<text>2, $<node>7);};
 func_call : T_ID T_OP args_list T_CP {$$ = make_node($1, $3, NULL);};
  
 %%
