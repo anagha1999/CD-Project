@@ -234,7 +234,7 @@
 			{
 				strcat(argsList, newVal);
 			}
-	    printf("\n\t%s\n", newVal);
+	    //printf("\n\t%s\n", newVal);
 	  }
 	  
 	  void clearArgsList()
@@ -350,7 +350,7 @@
 %locations
 
 %union { char *text; int depth; struct AST *node; };
-%type <node> StartParse StartDebugger args start_suite suite end_suite finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor for_stmt func_call call_args list_stmt
+%type <node> StartParse StartDebugger args start_suite suite end_suite finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor for_stmt func_call call_args list_stmt 
 
 %token T_EndOfFile  T_Number  T_Cln T_NL  T_IN T_NEQ T_EQ T_GT T_LT T_EGT T_ELT T_Or T_And  ID ND DD T_String Trip_Quote  T_Import   T_MN T_PL T_DV T_ML T_OP T_CP T_OB T_CB T_Def T_Comma T_Range T_List
 %token <text> T_ID T_EQL T_LEN T_True T_False T_Not T_Pass T_Break T_Return T_Print T_If T_Elif T_Else T_For T_While
@@ -483,7 +483,11 @@ elif_stmts : else_stmt{$$= $1;}
 else_stmt : T_Else T_Cln start_suite {$$ = make_node("ELSE", $3, make_leaf("NULL"));} ;
 
 for_stmt: T_For T_ID T_IN range_stmt T_Cln start_suite {$$ =make_node("FOR", make_leaf("range"), $6);}
-		 | T_For T_ID T_IN T_ID T_Cln start_suite {checkList($<text>4, @4.first_line, currentScope);$$ =make_node("FOR", make_leaf($<text>4), $6);} ; 
+		 | T_For T_ID T_IN T_ID T_Cln start_suite 
+		 	{
+		 		insertRecord("Identifier", $<text>2, @2.first_line, currentScope); 
+		 	 checkList($<text>4, @4.first_line, currentScope);
+		 	 $$ =make_node("FOR", make_leaf($<text>4), $6);} ; 
 
 while_stmt : T_While bool_exp T_Cln start_suite {$$ =make_node("WHILE", $2, $4);}; 
 
@@ -508,8 +512,9 @@ args_list : T_Comma T_ID {addToList($<text>2, 0);} args_list
 func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args
  T_CP T_Cln start_suite {$$ = make_for_node("Func_def", make_leaf($<text>2), $5, $8, make_leaf("NULL"));};
 
-list_stmt: T_OB T_CB { $$ = make_leaf("[]"); } |
-			 	T_OB call_args T_CB {$$ = make_leaf("LIST");};
+list_stmt: T_OB  T_CB { $$=make_leaf("[]");} ;
+
+		   
 
 call_list : T_Comma term {addToList($<text>1, 0);} call_list | ;
 
