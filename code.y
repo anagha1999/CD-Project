@@ -37,6 +37,7 @@
 
 	STable *symbolTables = NULL;
 	int sIndex = -1;
+	char *argsList = NULL;
 	
 	int power(int base, int exp)
 	{
@@ -85,6 +86,8 @@
 	
 	void init()
 	{
+		argsList = (char *)malloc(100);
+		strcpy(argsList, "");
 		symbolTables = (STable*)calloc(100, sizeof(STable));
 		arrayScope = (int*)calloc(10, sizeof(int));
 		initNewTable(1);
@@ -184,13 +187,17 @@
 
 				else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 				{
-					printf("Identifier '%s' at line %d Not Indexable\n", name, yylineno);
+					printf("Identifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
+					yyerror("Invalid Python Syntax");
+					return;
 					//exit(1);
 
 				}
 
 			}
-			printf("Identifier '%s' at line %d Not Declared as an Indexable Type\n", name, yylineno);
+			printf("Identifier '%s' at line %d Not Declared as an Indexable Type or has not been declared as a list\n", name, yylineno);
+			yyerror("Invalid Python Syntax");
+			return;
 			//exit(1);
 		}
 		
@@ -204,7 +211,9 @@
 			
 			else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 			{
-				printf("Identifier '%s' at line %d Not Indexable\n", name, yylineno);
+				printf("Identifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
+				yyerror("Invalid Python Syntax");
+				return;
 				//exit(1);
 
 			}
@@ -213,6 +222,25 @@
 		return checkList(name, lineNo, symbolTables[symbolTables[index].Parent].scope);
 
 	}
+
+	 void addToList(char *newVal, int flag)
+  	{
+	  	if(flag==0)
+	  	{
+			  strcat(argsList, ", ");
+			  strcat(argsList, newVal);
+			}
+			else
+			{
+				strcat(argsList, newVal);
+			}
+	    printf("\n\t%s\n", newVal);
+	  }
+	  
+	  void clearArgsList()
+	  {
+	    strcpy(argsList, "");
+	  }
 	
 	void printSTable()
 	{
@@ -278,7 +306,7 @@
 
 	struct AST* make_node(char* root, AST_node* child1, AST_node* child2)
 	{
-		printf("Creating new node\n");
+		//printf("Creating new node\n");
 		struct AST * node = (struct AST*)malloc(sizeof(struct AST));
 		node->child = (struct AST**)malloc(2*sizeof(struct AST *));
 		node->NumChild = 2;//
@@ -322,15 +350,15 @@
 %locations
 
 %union { char *text; int depth; struct AST *node; };
-%type <node> StartParse StartDebugger  args_list start_suite suite end_suite func_call finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor range_stmt for_stmt
+%type <node> StartParse StartDebugger args start_suite suite end_suite finalStatements arith_exp bool_exp term constant basic_stmt cmpd_stmt func_def list_index import_stmt pass_stmt break_stmt print_stmt if_stmt elif_stmts else_stmt while_stmt return_stmt assign_stmt bool_term bool_factor for_stmt func_call call_args list_stmt
 
 %token T_EndOfFile  T_Number  T_Cln T_NL  T_IN T_NEQ T_EQ T_GT T_LT T_EGT T_ELT T_Or T_And  ID ND DD T_String Trip_Quote  T_Import   T_MN T_PL T_DV T_ML T_OP T_CP T_OB T_CB T_Def T_Comma T_Range T_List
 %token <text> T_ID T_EQL T_LEN T_True T_False T_Not T_Pass T_Break T_Return T_Print T_If T_Elif T_Else T_For T_While
+
+%right T_EQL 
 %left T_PL T_MN
 %left T_ML T_DV
 %left T_OP T_CP
-%right T_EQL                                       
-
 %nonassoc T_If
 %nonassoc T_Elif
 %nonassoc T_Else
@@ -348,17 +376,17 @@ constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentSc
 		 | T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
 		 			  $$ = make_leaf($<text>1);};
 
-term : T_ID {
-			$$=make_leaf($1);
-			modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope);
-			} 
-	   | constant { $$=$1;} 
-	   | list_index{$$=$1;};
+
 
 list_index : T_ID T_OB T_Number T_CB {
 									  checkList($<text>1, @1.first_line, currentScope);
 									  $$ = make_node("ListIndex", make_leaf($<text>1), make_leaf($<text>3));
 									  };
+
+term : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
+		$$ = make_leaf("Identifier");} 
+     | constant {$$ = $1;} 
+     | list_index {$$ = $1;};
 
 StartParse : T_NL StartParse {$$=$2;}
 			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start", $1, $4);} 
@@ -371,20 +399,18 @@ basic_stmt : pass_stmt {$$=$1;}
 			| arith_exp {$$=$1;} 
 			| bool_exp {$$=$1;} 
 			| print_stmt {$$=$1;}
-			| return_stmt {$$=$1;}
-			| range_stmt ; 
+			| return_stmt {$$=$1;} ; 
 
-arith_exp :  term {$$=$1;}
+arith_exp :  term {printf("\nIn arith_exp->term"); $$=$1;}
 			| arith_exp  T_PL  arith_exp {$$ = make_node("+",$1, $3);}
 			| arith_exp  T_MN  arith_exp {$$ = make_node("-",$1, $3);}
-			| arith_exp  T_ML  arith_exp {$$ = make_node("/",$1, $3);}
- 			| arith_exp  T_DV  arith_exp {$$ = make_node("*",$1, $3);}
+			| arith_exp  T_ML  arith_exp {$$ = make_node("*",$1, $3);}
+ 			| arith_exp  T_DV  arith_exp {$$ = make_node("/",$1, $3);}
  			| T_MN term {$$ = make_node("temp", make_leaf("-"), $2);}
  			| T_OP arith_exp T_CP {$$=$2;};
 
 		    
-range_stmt:	  T_Range T_OP T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
-			| T_Range T_OP T_Number T_Comma T_Number T_CP{insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}
+
 
 
 bool_exp : bool_term T_Or bool_term {$$ = make_node("or", $1, $3);}
@@ -418,11 +444,25 @@ assign_stmt : T_ID T_EQL arith_exp
 			  //$1 = make_leaf($<text>1);
 			  $$=make_node("=",make_leaf($<text>1),$3);
 			  }  
-			 |T_ID T_EQL bool_exp {insertRecord("Identifier", $<text>1, @1.first_line, currentScope);}   
-			 |T_ID  T_EQL func_call {insertRecord("Identifier", $<text>1, @1.first_line, currentScope);} 
-			 |T_ID T_EQL T_OB T_CB {insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);} ;
+			 |T_ID T_EQL bool_exp 
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", make_leaf($<text>1), $3);
+			 }   
+			 |T_ID  T_EQL func_call
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", make_leaf($<text>1), $3);
+			 } 
+			 |T_ID T_EQL list_stmt 
+			 {
+			 	insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", make_leaf($<text>1), $3);
+			 } 
+
+			 ;
 	      
-print_stmt : T_Print T_OP T_String T_CP {$$=make_node("print_stmt", make_leaf($<text>3), make_leaf("NULL"));};
+print_stmt : T_Print T_OP term T_CP {$$=make_node("print_stmt", $3, make_leaf("NULL"));};
 
 finalStatements : basic_stmt 
 				| cmpd_stmt 
@@ -441,20 +481,44 @@ elif_stmts : else_stmt{$$= $1;}
 			| T_Elif bool_exp T_Cln start_suite elif_stmts {$$ = make_for_node("ELIF", $2, $4, $5, make_leaf("NULL"));} ;
 
 else_stmt : T_Else T_Cln start_suite {$$ = make_node("ELSE", $3, make_leaf("NULL"));} ;
-for_stmt: T_For bool_exp T_Cln start_suite {$$ =make_node($1, $2, $4);};
+
+for_stmt: T_For T_ID T_IN range_stmt T_Cln start_suite {$$ =make_node("FOR", make_leaf("range"), $6);}
+		 | T_For T_ID T_IN T_ID T_Cln start_suite {checkList($<text>4, @4.first_line, currentScope);$$ =make_node("FOR", make_leaf($<text>4), $6);} ; 
+
 while_stmt : T_While bool_exp T_Cln start_suite {$$ =make_node("WHILE", $2, $4);}; 
 
+range_stmt: T_Range T_OP T_Number T_CP 
+			| T_Range T_OP T_Number T_Comma T_Number T_CP 
+			| T_Range T_OP T_Number T_Comma T_Number T_Comma T_Number T_CP ;
 start_suite : basic_stmt {$$=$1;} 
 			| T_NL ID { initNewTable($<depth>2); updateCScope($<depth>2);} finalStatements suite {$$ =make_node("start_suite",  $4, $5);};
+
 suite : T_NL ND finalStatements suite {$$ = make_node("Next", $3, $4);}
 		| T_NL end_suite {$$ = $2;};
+
 end_suite : DD {updateCScope($<depth>1);} finalStatements {$$ = make_node("EndBlock", $3, make_leaf("NULL"));}
 		|{$$ = make_leaf("EndBlock"); resetDepth();};
 
-args_list : T_ID T_Comma args_list {$$ = $3;}
-		| T_ID {$$ = make_leaf($1);} | {$$ = make_leaf("none");};
-func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args_list T_CP T_Cln start_suite {$$ = make_for_node("Func_def", make_leaf($<text>2), $5, $8, make_leaf("NULL"));};
-func_call : T_ID T_OP args_list T_CP {$$ = make_node($1, $3, NULL);};
+args : T_ID {addToList($<text>1, 1);} args_list {$$ = make_leaf(argsList); clearArgsList();} 
+     | {$$ = make_leaf("null");};
+
+args_list : T_Comma T_ID {addToList($<text>2, 0);} args_list 
+			| {addToList("",0);};
+
+func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args
+ T_CP T_Cln start_suite {$$ = make_for_node("Func_def", make_leaf($<text>2), $5, $8, make_leaf("NULL"));};
+
+list_stmt: T_OB T_CB { $$ = make_leaf("[]"); } |
+			 	T_OB call_args T_CB {$$ = make_leaf("LIST");};
+
+call_list : T_Comma term {addToList($<text>1, 0);} call_list | ;
+
+call_args : T_ID {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}
+					| T_Number {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}
+					| T_String {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}	
+					| {$$ = make_leaf("null");};
+
+func_call : T_ID T_OP call_args T_CP {$$ = make_node("Func_Call", make_leaf($<text>1), $3);};
  
 %%
 
@@ -463,6 +527,7 @@ void yyerror(const char *msg)
 	//printSTable();
 	printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
+	printSTable();
 	exit(0);
 }
 
