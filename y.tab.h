@@ -46,36 +46,36 @@ extern int yydebug;
   enum yytokentype
   {
     T_EndOfFile = 258,
-    T_Number = 259,
-    T_Cln = 260,
-    T_NL = 261,
-    T_IN = 262,
-    T_NEQ = 263,
-    T_EQ = 264,
-    T_GT = 265,
-    T_LT = 266,
-    T_EGT = 267,
-    T_ELT = 268,
-    T_Or = 269,
-    T_And = 270,
-    ID = 271,
-    ND = 272,
-    DD = 273,
-    T_String = 274,
-    Trip_Quote = 275,
-    T_Import = 276,
-    T_MN = 277,
-    T_PL = 278,
-    T_DV = 279,
-    T_ML = 280,
-    T_OP = 281,
-    T_CP = 282,
-    T_OB = 283,
-    T_CB = 284,
-    T_Def = 285,
-    T_Comma = 286,
-    T_Range = 287,
-    T_List = 288,
+    T_Cln = 259,
+    T_NL = 260,
+    T_IN = 261,
+    T_NEQ = 262,
+    T_EQ = 263,
+    T_GT = 264,
+    T_LT = 265,
+    T_EGT = 266,
+    T_ELT = 267,
+    T_Or = 268,
+    T_And = 269,
+    ID = 270,
+    ND = 271,
+    DD = 272,
+    T_String = 273,
+    Trip_Quote = 274,
+    T_Import = 275,
+    T_MN = 276,
+    T_PL = 277,
+    T_DV = 278,
+    T_ML = 279,
+    T_OP = 280,
+    T_CP = 281,
+    T_OB = 282,
+    T_CB = 283,
+    T_Def = 284,
+    T_Comma = 285,
+    T_Range = 286,
+    T_List = 287,
+    T_Number = 288,
     T_ID = 289,
     T_EQL = 290,
     T_LEN = 291,
@@ -95,36 +95,36 @@ extern int yydebug;
 #endif
 /* Tokens.  */
 #define T_EndOfFile 258
-#define T_Number 259
-#define T_Cln 260
-#define T_NL 261
-#define T_IN 262
-#define T_NEQ 263
-#define T_EQ 264
-#define T_GT 265
-#define T_LT 266
-#define T_EGT 267
-#define T_ELT 268
-#define T_Or 269
-#define T_And 270
-#define ID 271
-#define ND 272
-#define DD 273
-#define T_String 274
-#define Trip_Quote 275
-#define T_Import 276
-#define T_MN 277
-#define T_PL 278
-#define T_DV 279
-#define T_ML 280
-#define T_OP 281
-#define T_CP 282
-#define T_OB 283
-#define T_CB 284
-#define T_Def 285
-#define T_Comma 286
-#define T_Range 287
-#define T_List 288
+#define T_Cln 259
+#define T_NL 260
+#define T_IN 261
+#define T_NEQ 262
+#define T_EQ 263
+#define T_GT 264
+#define T_LT 265
+#define T_EGT 266
+#define T_ELT 267
+#define T_Or 268
+#define T_And 269
+#define ID 270
+#define ND 271
+#define DD 272
+#define T_String 273
+#define Trip_Quote 274
+#define T_Import 275
+#define T_MN 276
+#define T_PL 277
+#define T_DV 278
+#define T_ML 279
+#define T_OP 280
+#define T_CP 281
+#define T_OB 282
+#define T_CB 283
+#define T_Def 284
+#define T_Comma 285
+#define T_Range 286
+#define T_List 287
+#define T_Number 288
 #define T_ID 289
 #define T_EQL 290
 #define T_LEN 291
@@ -146,7 +146,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 352 "code.y" /* yacc.c:1909  */
+#line 380 "code.y" /* yacc.c:1909  */
  char *text; int depth; struct AST *node; 
 
 #line 153 "y.tab.h" /* yacc.c:1909  */
