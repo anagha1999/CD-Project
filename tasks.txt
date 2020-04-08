@@ -1,0 +1,8 @@
+TO DO:
+  - ICG of -ve numbers
+  - ICG of func calls
+  - test AST of func calls
+  - ICG of for loop
+  - change output format
+  
+DONE:

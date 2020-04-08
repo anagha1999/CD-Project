@@ -4,6 +4,8 @@
 	#include <string.h>
 	#include <stdarg.h>
 
+
+
 	//--------------------------------BASIC VARIABLE DECLARATIONS----------------------------------------
 	extern int yylineno;
 	extern int depth;
@@ -13,6 +15,19 @@
 	
 	int *arrayScope = NULL;
 
+	//quad stuff
+	#define MAXQUADS 1000
+	typedef struct quad
+	{
+		char *R;
+		char *A1;
+		char *A2;
+		char *Op;
+		int I;
+	} quad;
+	
+	quad* all_quads = NULL;	
+	char* tString =NULL, *lString = NULL;
 
 
 	//-------------------------------------STRUCTURE DEFINITIONS----------------------------------------------
@@ -92,6 +107,9 @@
 		argsList = (char *)malloc(100);
 		strcpy(argsList, "");
 		symbolTables = (STable*)calloc(100, sizeof(STable));
+		all_quads = (quad*)calloc(MAXQUADS, sizeof(quad));
+		tString = (char*)calloc(10, sizeof(char));
+		lString = (char*)calloc(10, sizeof(char));
 		arrayScope = (int*)calloc(10, sizeof(int));
 		initNewTable(1);
 		
@@ -237,7 +255,7 @@
 			{
 				strcat(argsList, newVal);
 			}
-	    printf("\n\t%s\n", newVal);
+	    //printf("\n\t%s\n", newVal);
 	  }
 	  
 	void clearArgsList()
@@ -249,7 +267,7 @@
 	{
 		int i = 0, j = 0;
 		
-		printf("\n\n----------------------------All Symbol Tables----------------------------");
+		printf("\n\n----------------------------SYMBOL TABLES----------------------------");
 		printf("\nScope\tName\tType\t\tDeclaration\tLast Used Line\n");
 		for(i=0; i<=sIndex; i++)
 		{
@@ -277,18 +295,21 @@
 	//--------------------------------------------------------------------------------------------------------
 	//-------------------------------------AST FUNCTIONS/STRUCTS---------------------------------------------
 	//--------------------------------------------------------------------------------------------------------
-
+	int tempCount =0; //for ICG
 	typedef struct AST
 	{ 
-	char* nodeType;
+	int tempNo; //for ICG
+	char* nodeType; //for ICG
+
 	char lexeme[100];
 	int NumChild;
+	struct AST* left;
 	struct AST **child;
 	}AST_node;
 
 	struct AST* make_for_node(char* root, char* type, AST_node* child1, AST_node* child2, AST_node* child3, AST_node* child4);
 	//struct AST * make_node(char*, char*, AST_node*, AST_node*);
-	struct AST* make_leaf(char* root);
+	struct AST* make_leaf(char* root, char* type);
 	void AST_print(struct AST *t);
 
 	void AST_print(struct AST *t)
@@ -322,15 +343,18 @@
 		//printf("Creating new node\n");
 		struct AST * node = (struct AST*)malloc(sizeof(struct AST));
 		node->child = (struct AST**)malloc(2*sizeof(struct AST *));
-		node->NumChild = 2;//
+		node->NumChild = 2;
 		strcpy(node->lexeme,root);
-		node->nodeType = (char*)malloc(strlen(type)+1);
-		strcpy(node->nodeType,type);
 		//printf("Copied lexeme\n");
 		//printf("%s\n",node->lexeme);
 		//printf("Children = %s  %s\n", child1->lexeme, child2->lexeme);
 		node->child[0] = child1;
 		node->child[1] = child2;
+
+		//for ICG:
+		node->nodeType = (char*)malloc(strlen(type)+1);
+		strcpy(node->nodeType,type);
+		node->tempNo = tempCount++;
 		return node;
 	}
 
@@ -341,32 +365,386 @@
 		node->child = (struct AST**)malloc(4*sizeof(struct AST *));
 		node->NumChild = 4;
 		strcpy(node->lexeme,root);
-		node->nodeType = (char*)malloc(strlen(type)+1);
-		strcpy(node->nodeType,type);
 		node->child[0] = child1;
 		node->child[1] = child2;
 		node->child[2] = child3;
 		node->child[3] = child4;
+
+		//for ICG
+		node->nodeType = (char*)malloc(strlen(type)+1);
+		strcpy(node->nodeType,type);
+		node->tempNo = tempCount++;
+
 		return node;
 	}
 
 
-	struct AST* make_leaf(char* root)
+	struct AST* make_leaf(char* root, char* type)
 	{
 		//printf("Creating new leaf ");
 		struct AST * node = (struct AST*)malloc(sizeof(struct AST));
 		strcpy(node->lexeme,root);
-		node->nodeType= NULL;
 		//printf("%s\n",node->lexeme);
 		node->NumChild = 0;
 		node->child = NULL;
+
+		//for ICG
+		node->nodeType = (char*)malloc(strlen(type)+1);
+		strcpy(node->nodeType,type);
+		node->tempNo = tempCount++;
+
 		return node;
 	}
 
 	//--------------------------------------------------------------------------------------------------------
 	//-------------------------------------ICG FUNCTIONS/STRUCTS---------------------------------------------
 	//--------------------------------------------------------------------------------------------------------
+	
+	int qIndex = 0; //used to index the quads array
+	int lIndex = 0; //used to index the labels
+	void make_quad(char *Op, char *A1, char *A2, char *R)
+	{
+		
+		all_quads[qIndex].R = (char*)malloc(strlen(R)+1);
+		all_quads[qIndex].Op = (char*)malloc(strlen(Op)+1);
+		all_quads[qIndex].A1 = (char*)malloc(strlen(A1)+1);
+		all_quads[qIndex].A2 = (char*)malloc(strlen(A2)+1);
+		
+		strcpy(all_quads[qIndex].R, R);
+		strcpy(all_quads[qIndex].A1, A1);
+		strcpy(all_quads[qIndex].A2, A2);
+		strcpy(all_quads[qIndex].Op, Op);
+		all_quads[qIndex].I = qIndex;
+ 
+		qIndex++;
+		
+		return;
+	}
 
+	void printQuads()
+	{
+		printf("\n--------------------------------QUADS---------------------------------\n");
+		int i = 0;
+		printf("Line No\t\tOp\t\tArg1\t\tArg2\t\tRes\n");
+		for(i=0; i<qIndex; i++)
+		{
+			if(all_quads[i].I > -1)
+				printf("%d\t\t%s\t\t%s\t\t%s\t\t%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
+		}
+		printf("--------------------------------------------------------------------------\n");
+	}
+
+	void Xitoa(int num, char *str)
+	{
+		if(str == NULL)
+		{
+			 printf("Allocate Memory\n");
+		   return;
+		}
+		sprintf(str, "%d", num);
+	}
+
+	char *makeStr(int no, int flag)
+	{
+		char A[10];
+		Xitoa(no, A);
+		
+		if(flag==1) //if it's a variable
+		{
+				strcpy(tString, "T");
+				strcat(tString, A);
+				insertRecord("ICGTempVar", tString, -1, 0);
+				return tString;
+		}
+		else //if it's a label
+		{
+				strcpy(lString, "L");
+				strcat(lString, A);
+				insertRecord("ICGTempLabel", lString, -1, 0);
+				return lString;
+		}
+	}
+
+	int checkIfBinOperator(char *Op)
+	{
+		if((!strcmp(Op, "+")) || (!strcmp(Op, "-"))|| (!strcmp(Op, "*")) || (!strcmp(Op, "/")) || (!strcmp(Op, ">=")) || (!strcmp(Op, "<=")) || (!strcmp(Op, "<")) || (!strcmp(Op, ">")) || 
+			 (!strcmp(Op, "in")) || (!strcmp(Op, "==")) || (!strcmp(Op, "and")) || (!strcmp(Op, "or")))
+			{
+				return 1;
+			}
+			
+			else 
+			{
+				return 0;
+			}
+	}
+
+	void ICG_main(AST_node* node)
+	{
+		//printf("\n\nIn ICG_main\n");
+		if(node == NULL || (!strcmp(node->nodeType, "")))
+		{
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "BeginBlock") || !strcmp(node->nodeType, "EndBlock") || !strcmp(node->nodeType, "NewLine") || !strcmp(node->nodeType, "Next"))
+		{
+			ICG_main(node->child[0]);
+			ICG_main(node->child[1]);		
+			return;	
+		}
+
+		if((!strcmp(node->nodeType, "Identifier")) || (!strcmp(node->nodeType, "Constant")))
+		{
+			//printf("\n%s", node->nodeType);
+			printf("T%d = %s\n", node->tempNo, node->lexeme);
+			make_quad("=", node->lexeme,  "-", makeStr(node->tempNo, 1));
+			return;
+		}
+
+		if(!(strcmp(node->nodeType, "Print")))
+		{
+			ICG_main(node->child[0]);
+			printf("Print T%d\n", node->child[0]->tempNo);
+			make_quad("Print", makeStr(node->tempNo, 1), "-", "-");
+		}
+
+		if(!strcmp(node->nodeType, "import"))
+		{
+			printf("import %s\n", node->child[0]->lexeme);
+			make_quad("import", node->child[0]->lexeme, "-", "-");
+			return;
+		}
+			
+		
+		if(checkIfBinOperator(node->nodeType)==1)
+		{
+			ICG_main(node->child[0]);
+			ICG_main(node->child[1]);
+			char *res = (char*)malloc(10);
+			char *arg1 = (char*)malloc(10);
+			char *arg2 = (char*)malloc(10);
+			
+			strcpy(res, makeStr(node->tempNo, 1));
+			strcpy(arg1, makeStr(node->child[0]->tempNo, 1));
+			strcpy(arg2, makeStr(node->child[1]->tempNo, 1));
+
+			printf("T%d = T%d %s T%d\n", node->tempNo, node->child[0]->tempNo, node->lexeme, node->child[1]->tempNo);
+			make_quad(node->lexeme, arg1, arg2, res);
+			free(arg1);
+			free(arg2);
+			free(res);
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "unary-"))
+		{
+				ICG_main(node->child[1]);
+				char *X1 = (char*)malloc(10);
+				char *X2 = (char*)malloc(10);
+				strcpy(X1, makeStr(node->tempNo, 1));
+				strcpy(X2, makeStr(node->child[1]->tempNo, 1));
+				printf("T%d = %s T%d\n", node->tempNo, node->nodeType, node->child[1]->tempNo);
+				make_quad(node->nodeType , X2, "-", X1);	
+			}
+			
+
+		
+
+		if(!strcmp(node->nodeType, "="))
+		{
+			ICG_main(node->child[1]);
+			printf("%s = T%d\n", node->child[0]->lexeme, node->child[1]->tempNo);
+			make_quad(node->nodeType, makeStr(node->child[1]->tempNo, 1), "-",  node->child[0]->lexeme);
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "ListIndex"))
+		{
+			printf("T%d = %s[%s]\n", node->tempNo, node->child[0]->lexeme, node->child[1]->lexeme);
+			make_quad("=[]", node->child[0]->lexeme, node->child[1]->lexeme, makeStr(node->tempNo, 1));
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "ListDecl"))
+		{
+			//ICG_main(node->child[1]);
+			printf("%s = %s\n", node->child[0]->lexeme, node->child[1]->lexeme);
+			make_quad(node->nodeType, node->child[1]->lexeme, "-",  node->child[0]->lexeme);
+			return;
+
+		}
+
+
+
+	
+		if((!strcmp(node->nodeType, "IF")))
+		{			
+			int temp = lIndex;
+			ICG_main(node->child[0]);
+			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex);
+			make_quad("If False",  makeStr(node->child[0]->tempNo, 1), "-", makeStr(temp, 0));
+			lIndex++;
+			ICG_main(node->child[1]);
+			lIndex--;
+			printf("L%d: ", temp);
+			lIndex++;
+			make_quad("Label", "-", "-", makeStr(temp, 0));
+			return;
+		}
+
+				
+		if((!strcmp(node->nodeType, "IF-ELIF-ELSE")))
+		{			
+
+			
+			ICG_main(node->child[0]);
+			ICG_main(node->child[1]);
+			
+		}
+			
+		if((!strcmp(node->nodeType, "ELIF")))
+		{
+
+			int temp = lIndex;
+			ICG_main(node->child[0]);
+			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex);
+			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-", makeStr(temp, 0));				
+			ICG_main(node->child[1]);
+			printf("goto L%d\n", temp+1);
+			make_quad("goto", "-", "-", makeStr(temp+1, 0));
+			printf("L%d: ", temp);
+			make_quad("Label", "-", "-", makeStr(temp, 0));
+			ICG_main(node->child[2]);
+			printf("L%d: ", temp+1);
+			make_quad("Label", "-", "-", makeStr(temp+1, 0));
+			lIndex+=2;
+
+		}
+		if(!strcmp(node->nodeType, "ELSE"))
+		{
+			ICG_main(node->child[0]);
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "WHILE"))
+		{
+			int temp = lIndex;
+			ICG_main(node->child[0]);
+			printf("L%d: If False T%d goto L%d\n", lIndex, node->child[0]->tempNo, lIndex+1);
+			make_quad( "Label", "-", "-",makeStr(temp, 0));		
+			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-",makeStr(temp+1, 0) );								
+			lIndex+=2;			
+			ICG_main(node->child[1]);
+			printf("goto L%d\n", temp);
+			make_quad("goto", "-", "-", makeStr(temp, 0));
+			printf("L%d: ", temp+1);
+			make_quad("Label", "-", "-", makeStr(temp+1, 0)); 
+			lIndex = lIndex+2;
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "FOR"))
+		{
+			int temp = lIndex;
+
+			//printf("%s\n",node->child[0]->nodeType); 
+			char* token = strtok(node->child[0]->nodeType, ","); 
+  			char rangeStart[10];
+  			char rangeEnd[10];
+		    int flag =0;
+		    while (token != NULL) { 
+		    	//printf("token =%s\n",token);
+		    	if(flag==0)
+		    	{
+		    		strcpy(rangeStart,token);
+		    		flag=1;
+		    	}
+		        token = strtok(NULL, ","); 
+		        if(token!=NULL)
+		        	strcpy(rangeEnd,token);
+		    } 
+		    //printf("\nrangeStart =%s rangeEnd =%s",rangeStart,rangeEnd);
+
+		    char *loop_var=strtok(node->child[0]->lexeme, " ");
+			make_quad("=", rangeStart, "-",  loop_var); //initializing i=0
+			printf("%s = %s\n", loop_var, rangeStart);
+
+			make_quad( "Label", "-", "-",makeStr(temp, 0));	//everything in the current loop is under a label
+			printf("L%d: ", lIndex);
+
+			make_quad("<", loop_var, rangeEnd, makeStr(node->child[0]->tempNo,1)); //t=i<n
+			printf("T%d= %s<%s\n", node->child[0]->tempNo, loop_var, rangeEnd );
+			
+			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-",makeStr(temp+1, 0) );
+			//if condition is false, goto exit label				
+			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex+1);
+
+			lIndex+=2;			
+			ICG_main(node->child[1]);
+
+			//increment loop variable
+			printf("T%d = %s + 1\n", node->tempNo, loop_var);
+			make_quad("+", loop_var, "1", makeStr(node->tempNo,1));
+			printf("%s = T%d\n", loop_var, node->tempNo);
+			make_quad("=", makeStr(node->tempNo,1), "-",  loop_var);
+			
+			printf("goto L%d\n", temp); //end of loop
+			make_quad("goto", "-", "-", makeStr(temp, 0));
+
+			printf("L%d: ", temp+1);
+			make_quad("Label", "-", "-", makeStr(temp+1, 0)); 
+
+			lIndex = lIndex+2;
+			return;
+
+
+		}
+
+		if(!strcmp(node->nodeType, "Func_Name"))
+		{
+			printf("Begin Function %s\n", node->child[0]->lexeme);
+			make_quad("BeginF", node->child[0]->lexeme, "-", "-");
+			ICG_main(node->child[2]);
+			printf("End Function %s\n", node->child[0]->lexeme);
+			make_quad("EndF", node->child[0]->lexeme, "-", "-");
+			return;
+		}
+
+		if(!strcmp(node->nodeType, "Func_Call"))
+		{
+			if(!strcmp(node->child[1]->nodeType, "Void"))
+			{
+				printf("(T%d)Call Function %s\n", node->tempNo, node->child[0]->lexeme);
+				make_quad("Call", node->child[0]->lexeme, "-", makeStr(node->tempNo, 1));
+			}
+			else
+			{
+				char A[10];
+				char* token = strtok(node->child[1]->lexeme, ","); 
+  				int i = 0;
+				while (token != NULL) 
+				{
+						i++; 
+				    printf("Push Param %s\n", token);
+				    make_quad("Param", token, "-", "-"); 
+				    token = strtok(NULL, ","); 
+				}
+				
+				printf("(T%d)Call Function %s, %d\n", node->tempNo, node->child[0]->lexeme, i);
+				sprintf(A, "%d", i);
+				make_quad("Call", node->child[0]->lexeme, A, makeStr(node->tempNo, 1));
+				printf("Pop Params for Function %s, %d\n", node->child[0]->lexeme, i);
+								
+				return;
+			}
+		}		
+
+
+
+	}
+		
+		
 
 	
 
@@ -397,24 +775,26 @@
  
 
 %%
-StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n"); 
-printf("\n\n---------------------------------AST-----------------------------------"); AST_print($2);   
-printSTable(); freeAll(); exit(0);} ;
+StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n" ); printf("--------------------------------------------------------------------------\n");
+printf("\n\n---------------------------------AST-----------------------------------"); AST_print($2); printf("\n--------------------------------------------------------------------------\n");
+printf("\n\n-----------------------------------ICG-----------------------------------\n"); ICG_main($2);
+printf("--------------------------------------------------------------------------\n");
+printQuads($2); printSTable(); freeAll(); exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
-					  $$ = make_leaf($<text>1);}
+					  $$ = make_leaf($<text>1, "Constant");}
 		 | T_String {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
-		 			  $$ = make_leaf($<text>1);};
+		 			  $$ = make_leaf($<text>1, "Constant");};
 
 
 
 list_index : T_ID T_OB T_Number T_CB {
 									  checkList($<text>1, @1.first_line, currentScope);
-									  $$ = make_node("ListIndex", "ListIndex", make_leaf($<text>1), make_leaf($<text>3));
+									  $$ = make_node("ListIndex", "ListIndex", make_leaf($<text>1, "ListTypeID"), make_leaf($3, "Constant"));
 									  };
 
 term : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
-		$$ = make_leaf("Identifier");} 
+		$$ = make_leaf($<text>1,"Identifier");} 
      | constant {$$ = $1;} 
      | list_index {$$ = $1;};
 
@@ -431,12 +811,12 @@ basic_stmt : pass_stmt {$$=$1;}
 			| print_stmt {$$=$1;}
 			| return_stmt {$$=$1;} ; 
 
-arith_exp :  term {printf("\nIn arith_exp->term"); $$=$1;}
+arith_exp :  term { $$=$1;}
 			| arith_exp  T_PL  arith_exp {$$ = make_node("+","+",$1, $3); }
 			| arith_exp  T_MN  arith_exp {$$ = make_node("-","-",$1, $3);}
 			| arith_exp  T_ML  arith_exp {$$ = make_node("*","*",$1, $3);}
  			| arith_exp  T_DV  arith_exp {$$ = make_node("/","/",$1, $3);}
- 			| T_MN term {$$ = make_node("temp","unary-", make_leaf("-"), $2);}
+ 			| T_MN term {$$ = make_node("temp","unary-", make_leaf("-", ""), $2);}
  			| T_OP arith_exp T_CP {$$=$2;};
 
 		    
@@ -450,51 +830,50 @@ bool_exp : bool_term T_Or bool_term {$$ = make_node("or", "or", $1, $3);}
          | arith_exp T_ELT arith_exp {$$ = make_node("<=","<=", $1, $3);}
          | arith_exp T_EGT arith_exp {$$ = make_node(">=",">=",$1, $3);}
          | arith_exp T_IN T_ID {checkList($<text>3, @3.first_line, currentScope); 
-         $$ = make_node("in", "in", $1, make_leaf("$<text>3"));}
+         $$ = make_node("in", "in", $1, make_leaf($<text>3, "Constant"));}
          | bool_term {$$=$1;}; 
 
 bool_term : bool_factor {$$ = $1;}
           | arith_exp T_EQ arith_exp {$$ = make_node("==", "==",$1, $3);}
-          | T_True {insertRecord("Constant", "True", @1.first_line, currentScope); $$ = make_leaf("True");}
-          | T_False {insertRecord("Constant", "False", @1.first_line, currentScope); $$ = make_leaf("False");}; 
+          | T_True {insertRecord("Constant", "True", @1.first_line, currentScope); $$ = make_leaf("True", "Constant");}
+          | T_False {insertRecord("Constant", "False", @1.first_line, currentScope); $$ = make_leaf("False", "Constant");}; 
           
-bool_factor : T_Not bool_factor {$$ = make_node("not", "not", make_leaf("end"), $2);}
+bool_factor : T_Not bool_factor {$$ = make_node("not", "not", make_leaf("", ""), $2);}
             | T_OP bool_exp T_CP {$$ = $2;}; 
 
 import_stmt : T_Import T_ID {insertRecord("PackageName", $<text>2, @2.first_line, currentScope); 
-							  $$ = make_node("import_stmt", "import", make_leaf("import"), make_leaf($<text>2) );};
+							  $$ = make_node("import", "import", make_leaf($<text>2, "PackageName"), make_leaf("", "") );};
 
-pass_stmt   : T_Pass {$$=make_node("pass_stmt", "pass", make_leaf("pass"), make_leaf("end"));};
-break_stmt  : T_Break {$$=make_node("break_stmt", "break", make_leaf("break"), make_leaf("end"));};
-return_stmt : T_Return {$$=make_node("return_stmt", "return", make_leaf("return"), make_leaf("end"));}; 
+pass_stmt   : T_Pass {$$=make_leaf("pass", "pass");};
+break_stmt  : T_Break {$$=make_leaf("break", "break");};
+return_stmt : T_Return {$$=make_leaf("return", "return");}; 
 
 assign_stmt : T_ID T_EQL arith_exp 
 			{
 			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
-			  //$1 = make_leaf($<text>1);
-			  $$=make_node("=","=",make_leaf($<text>1),$3);
+			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
 			  }  
 			 |T_ID T_EQL bool_exp 
 			 {
 			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
-			 	$$ = make_node("=","=", make_leaf($<text>1), $3);
+			 	$$ = make_node("=","=", make_leaf($<text>1, "Identifier"), $3);
 			 }   
 			 |T_ID  T_EQL func_call
 			 {
 			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
-			 	$$ = make_node("=", "=",make_leaf($<text>1), $3);
+			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
 			 } 
 			 |T_ID T_EQL list_stmt 
 			 {
 			 	insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);
-			 	$$ = make_node("=", "ListTypeID", make_leaf($<text>1), $3);
+			 	$$ = make_node("=", "ListDecl", make_leaf($<text>1, "ListTypeID"), $3);
 			 } 
 
 			 ;
 	      
-print_stmt : T_Print T_OP term T_CP {$$=make_node("print_stmt", "Print", $3, make_leaf("NULL"));};
+print_stmt : T_Print T_OP term T_CP {$$=make_node("Print", "Print", $3, make_leaf("", ""));};
 
-finalStatements : basic_stmt 
+finalStatements : basic_stmt  
 				| cmpd_stmt 
 				| func_def ;
 
@@ -509,56 +888,81 @@ if_stmt : T_If bool_exp T_Cln start_suite {$$= make_node("IF", "IF", $2, $4);}
 
 
 elif_stmts : else_stmt{$$= $1;} 
-			| T_Elif bool_exp T_Cln start_suite elif_stmts {$$ = make_for_node("ELIF", "ELIF", $2, $4, $5, make_leaf("NULL"));} ;
+			| T_Elif bool_exp T_Cln start_suite elif_stmts {$$ = make_for_node("ELIF", "ELIF", $2, $4, $5, make_leaf("",""));} ;
 
-else_stmt : T_Else T_Cln start_suite {$$ = make_node("ELSE","ELSE", $3, make_leaf("NULL"));} ;
+else_stmt : T_Else T_Cln start_suite {$$ = make_node("ELSE","ELSE", $3, make_leaf("", ""));} ;
 
-for_stmt: T_For T_ID T_IN range_stmt T_Cln start_suite {$$ =make_node("FOR", "FOR", make_leaf("range"), $6);}
-		 | T_For T_ID T_IN T_ID T_Cln start_suite {checkList($<text>4, @4.first_line, currentScope);$$ =make_node("FOR", "FOR", make_leaf($<text>4), $6);} ; 
+for_stmt: T_For T_ID T_IN range_stmt T_Cln start_suite 
+			{
+				insertRecord("Identifier", $<text>2, @2.first_line, currentScope); 
+				char rangeNodeText[20] ="";
+				strcat(rangeNodeText, $<text>2);
+				strcat(rangeNodeText, " in range");
+				//printf("%\n%s", rangeNodeText);
+				$$ =make_node("FOR", "FOR", make_leaf(rangeNodeText, argsList), $6);  
+				clearArgsList(); 
+			}
+		 | T_For T_ID T_IN T_ID T_Cln start_suite {
+		 insertRecord("Identifier", $<text>2, @2.first_line, currentScope); 
+		 checkList($<text>4, @4.first_line, currentScope);
+		 $$ =make_node("FOR", "FOR", make_leaf($<text>4, "Identifier"), $6);} ; 
 
 while_stmt : T_While bool_exp T_Cln start_suite {$$ =make_node("WHILE","WHILE", $2, $4);}; 
 
-range_stmt: T_Range T_OP T_Number T_CP 
-			| T_Range T_OP T_Number T_Comma T_Number T_CP 
-			| T_Range T_OP T_Number T_Comma T_Number T_Comma T_Number T_CP ;
+range_stmt: T_Range T_OP T_Number T_CP {addToList("0", 1); addToList($<text>3, 0); }
+			| T_Range T_OP T_Number T_Comma T_Number T_CP {addToList($<text>3, 1); addToList($<text>5, 0);}
+			| T_Range T_OP T_Number T_Comma T_Number T_Comma T_Number T_CP {addToList($<text>3, 1); addToList($<text>5, 0);};
 start_suite : basic_stmt {$$=$1;} 
 			| T_NL ID { initNewTable($<depth>2); updateCScope($<depth>2);} finalStatements suite {$$ =make_node("start_suite", "BeginBlock", $4, $5);};
 
 suite : T_NL ND finalStatements suite {$$ = make_node("Next", "Next", $3, $4);}
 		| T_NL end_suite {$$ = $2;};
 
-end_suite : DD {updateCScope($<depth>1);} finalStatements {$$ = make_node("EndBlock", "EndBlock", $3, make_leaf("NULL"));}
-		|{$$ = make_node("EndBlock", "EndBlock", make_leaf(""), make_leaf("")); resetDepth();};
+end_suite : DD {updateCScope($<depth>1);} finalStatements {$$ = make_node("", "EndBlock", $3, make_leaf("", ""));}
+		|{$$ = make_leaf("", ""); resetDepth();};
 
-args : T_ID {addToList($<text>1, 1);} args_list {$$ = make_leaf(argsList); clearArgsList();} 
-     | {$$ = make_leaf("null");};
+args : T_ID {insertRecord("Identifier", $<text>1, @1.first_line, currentScope); addToList($<text>1, 1);}
+ args_list {$$ = make_leaf(argsList, "argsList"); clearArgsList();} 
+     | {$$ = make_leaf("", "Void");};
 
-args_list : T_Comma T_ID {addToList($<text>2, 0);} args_list 
+args_list : T_Comma T_ID {insertRecord("Identifier", $<text>2, @2.first_line, currentScope); addToList($<text>2, 0);} args_list 
 			| {addToList("",0);};
 
 func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args
- T_CP T_Cln start_suite {$$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2), $5, $8, make_leaf("NULL"));};
+ T_CP T_Cln start_suite {$$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2, "Func_Name"), $5, $8, make_leaf("",""));};
 
-list_stmt: T_OB T_CB { $$ = make_leaf("[]"); } |
-			 	T_OB call_args T_CB {$$ = make_leaf("LIST");};
+list_stmt: T_OB T_CB { $$ = make_leaf("[]", ""); } 
+		 |	
+			 	T_OB call_args T_CB {
+			 	char* str = (char *)malloc(102*sizeof(char));
+			 	strcpy(str,"[");
+			 	strcat(str, argsList);
+			 	char close[2];
+			 	strcpy(close,"]");
+			 	strcat(str, close);
+			 	$$ = make_leaf(str, ""); 
+			 	clearArgsList(); 
+			 	free(str);};
 
-call_list : T_Comma term {addToList($<text>1, 0);} call_list | ;
+call_list : T_Comma term {addToList($2->lexeme, 0);} call_list | ;
 
-call_args : T_ID {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}
-					| T_Number {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}
-					| T_String {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList); clearArgsList();}	
-					| {$$ = make_leaf("null");};
+call_args : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }
+					| T_Number {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }
+					| T_String {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }	
+					| {$$ = make_leaf("","Void");};
 
-func_call : T_ID T_OP call_args T_CP {$$ = make_node("Func_Call", "Func_Call",make_leaf($<text>1), $3);};
+func_call : T_ID {modifyRecordID("Func_Name", $<text>1, @1.first_line, currentScope);}T_OP call_args T_CP {$$ = make_node("Func_Call", "Func_Call",make_leaf($<text>1, "Func_Name"), $4);};
  
 %%
 
 void yyerror(const char *msg)
 {
 	//printSTable();
-	printf("\n\n%s", msg);
+	//printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
+	printf("--------------------------------------------------------------------------\n");
 	printSTable();
+	printf("--------------------------------------------------------------------------\n");
 	exit(0);
 }
 

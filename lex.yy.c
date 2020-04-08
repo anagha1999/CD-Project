@@ -567,7 +567,7 @@ char *yytext;
  		#ifdef DEBUG
  		if(startFlag)
  		{
- 			printf("---------------------------------Token Sequence--------------------------\n1 ");
+ 			printf("---------------------------------TOKENS--------------------------\n1 ");
  			startFlag=0;
  		}
  		if(strcmp(X, "NL")==0)
@@ -2194,7 +2194,6 @@ int main()
 {
 	yyparse();
 	yylex();
-	
 	return 0;
 }
 
