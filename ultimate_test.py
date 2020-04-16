@@ -6,7 +6,7 @@ for i in z:
 	print(x)
 	x= x+1
 
-for i in range(0,3,2):
+for i in range(0,3):
 	y = y+1
 
 if(x <5):

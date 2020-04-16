@@ -332,7 +332,7 @@
 	{
 		int i = 0, j = 0;
 		
-		printf("\n\n----------------------------SYMBOL TABLES----------------------------");
+		printf("\n\n*************************SYMBOL TABLES**************************");
 		printf("\nScope\tName\tType\t\tDeclaration\tLast Used Line\n");
 		for(i=0; i<=sIndex; i++)
 		{
@@ -488,7 +488,7 @@
 
 	void printQuads()
 	{
-		printf("\n--------------------------------QUADS---------------------------------\n");
+		printf("\n********************************QUADS*********************************\n");
 		int i = 0;
 		printf("Line No\t\tOp\t\tArg1\t\tArg2\t\tRes\n");
 		for(i=0; i<qIndex; i++)
@@ -496,7 +496,7 @@
 			if(all_quads[i].I > -1)
 				printf("%d\t\t%s\t\t%s\t\t%s\t\t%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
 		}
-		printf("--------------------------------------------------------------------------\n");
+		printf("**************************************************************************\n");
 	}
 
 	void Xitoa(int num, char *str)
@@ -2303,10 +2303,10 @@ yyreduce:
 
   case 3:
 #line 778 "code.y" /* yacc.c:1646  */
-    {printf("\nValid Python Syntax\n" ); printf("--------------------------------------------------------------------------\n");
-printf("\n\n---------------------------------AST-----------------------------------"); AST_print((yyvsp[-1].node)); printf("\n--------------------------------------------------------------------------\n");
-printf("\n\n-----------------------------------ICG-----------------------------------\n"); ICG_main((yyvsp[-1].node));
-printf("--------------------------------------------------------------------------\n");
+    {printf("\nValid Python Syntax\n" ); printf("**************************************************************************\n");
+printf("\n\n*********************************AST***********************************"); AST_print((yyvsp[-1].node)); printf("\n**************************************************************************\n");
+printf("\n\n***********************************ICG***********************************\n"); ICG_main((yyvsp[-1].node));
+printf("**************************************************************************\n");
 printQuads((yyvsp[-1].node)); printSTable(); freeAll(); exit(0);}
 #line 2312 "y.tab.c" /* yacc.c:1646  */
     break;
@@ -2336,7 +2336,7 @@ printQuads((yyvsp[-1].node)); printSTable(); freeAll(); exit(0);}
 
   case 7:
 #line 796 "code.y" /* yacc.c:1646  */
-    {modifyRecordID("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); 
+    { modifyRecordID("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); 
 		(yyval.node) = make_leaf((yyvsp[0].text),"Identifier");}
 #line 2342 "y.tab.c" /* yacc.c:1646  */
     break;
@@ -3129,9 +3129,9 @@ void yyerror(const char *msg)
 	//printSTable();
 	//printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
-	printf("--------------------------------------------------------------------------\n");
+	printf("**************************************************************************\n");
 	printSTable();
-	printf("--------------------------------------------------------------------------\n");
+	printf("**************************************************************************\n");
 	exit(0);
 }
 

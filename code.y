@@ -267,7 +267,7 @@
 	{
 		int i = 0, j = 0;
 		
-		printf("\n\n----------------------------SYMBOL TABLES----------------------------");
+		printf("\n\n*************************SYMBOL TABLES**************************");
 		printf("\nScope\tName\tType\t\tDeclaration\tLast Used Line\n");
 		for(i=0; i<=sIndex; i++)
 		{
@@ -295,12 +295,12 @@
 	//--------------------------------------------------------------------------------------------------------
 	//-------------------------------------AST FUNCTIONS/STRUCTS---------------------------------------------
 	//--------------------------------------------------------------------------------------------------------
-	int tempCount =0; //for ICG
+	int tempCount =0; //for ICG - global var that holds '0', '1' etc:-, 
+				      //this val. is appended to each 'tempNo' of each node to make it T0, T1 etc:-
 	typedef struct AST
 	{ 
 	int tempNo; //for ICG
 	char* nodeType; //for ICG
-
 	char lexeme[100];
 	int NumChild;
 	struct AST* left;
@@ -423,7 +423,7 @@
 
 	void printQuads()
 	{
-		printf("\n--------------------------------QUADS---------------------------------\n");
+		printf("\n********************************QUADS*********************************\n");
 		int i = 0;
 		printf("Line No\t\tOp\t\tArg1\t\tArg2\t\tRes\n");
 		for(i=0; i<qIndex; i++)
@@ -431,7 +431,7 @@
 			if(all_quads[i].I > -1)
 				printf("%d\t\t%s\t\t%s\t\t%s\t\t%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
 		}
-		printf("--------------------------------------------------------------------------\n");
+		printf("**************************************************************************\n");
 	}
 
 	void Xitoa(int num, char *str)
@@ -775,10 +775,10 @@
  
 
 %%
-StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n" ); printf("--------------------------------------------------------------------------\n");
-printf("\n\n---------------------------------AST-----------------------------------"); AST_print($2); printf("\n--------------------------------------------------------------------------\n");
-printf("\n\n-----------------------------------ICG-----------------------------------\n"); ICG_main($2);
-printf("--------------------------------------------------------------------------\n");
+StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\n" ); printf("**************************************************************************\n");
+printf("\n\n*********************************AST***********************************"); AST_print($2); printf("\n**************************************************************************\n");
+printf("\n\n***********************************ICG***********************************\n"); ICG_main($2);
+printf("**************************************************************************\n");
 printQuads($2); printSTable(); freeAll(); exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
@@ -793,7 +793,7 @@ list_index : T_ID T_OB T_Number T_CB {
 									  $$ = make_node("ListIndex", "ListIndex", make_leaf($<text>1, "ListTypeID"), make_leaf($3, "Constant"));
 									  };
 
-term : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
+term : T_ID { modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
 		$$ = make_leaf($<text>1,"Identifier");} 
      | constant {$$ = $1;} 
      | list_index {$$ = $1;};
@@ -960,9 +960,9 @@ void yyerror(const char *msg)
 	//printSTable();
 	//printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
-	printf("--------------------------------------------------------------------------\n");
+	printf("**************************************************************************\n");
 	printSTable();
-	printf("--------------------------------------------------------------------------\n");
+	printf("**************************************************************************\n");
 	exit(0);
 }
 

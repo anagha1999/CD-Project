@@ -1,0 +1,37 @@
+x = 10
+y = 30
+z = x + 20 
+
+Three Address Code - per statement it has
+-> at most three addresses
+-> ONE operator ONLY
+-> INTERMEDIATE values at each instruction to be stored in a temp variable
+t0 = 10
+x = t0
+t1 = 30
+y = t1 
+t2 = x
+t3 = 20
+t4 = t2 + t3
+z = t4
+
+
+Quads:
+op 		arg1	arg2	res
+=		10		- 		t0
+=		t0		-		x
++		t2		t3		t4
+
+
+
+
+
+
+Optimized:
+x = 10
+y = 30
+t0 = x + 20
+z = t0
+
+
+

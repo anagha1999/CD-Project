@@ -1,8 +1,11 @@
 TO DO:
-  - ICG of -ve numbers
+  - change output format
+  - ICG of for loop in list/string
+  - for i in range:
+  		print(i)
+
+DONE:
   - ICG of func calls
   - test AST of func calls
-  - ICG of for loop
-  - change output format
-  
-DONE:
+  - ICG of -ve numbers
+  - ICG of for loop (in range)
