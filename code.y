@@ -28,6 +28,9 @@
 	
 	quad* all_quads = NULL;	
 	char* tString =NULL, *lString = NULL;
+	void printQuads();
+
+	int ICG_opt(); //optimization code
 
 
 	//-------------------------------------STRUCTURE DEFINITIONS----------------------------------------------
@@ -146,7 +149,8 @@
 					return;
 				}	
 			}
-			//printf("Identifier '%s' at line %d Not Declared\n", name, yylineno);
+			printf("\nIdentifier '%s' at line %d Not Declared\n", name, yylineno);
+			yyerror("Invalid Python Syntax");
 			//printSTable();
 			check_error =1;
 			//exit(1);
@@ -208,7 +212,7 @@
 
 				else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 				{
-					printf("Identifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
+					printf("\nIdentifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
 					yyerror("Invalid Python Syntax");
 					return;
 					//exit(1);
@@ -216,7 +220,7 @@
 				}
 
 			}
-			printf("Identifier '%s' at line %d Not Declared as an Indexable Type or has not been declared as a list\n", name, yylineno);
+			printf("\nIdentifier '%s' at line %d Not Declared as an Indexable Type or has not been declared as a list\n", name, yylineno);
 			yyerror("Invalid Python Syntax");
 			return;
 			//exit(1);
@@ -268,7 +272,7 @@
 		int i = 0, j = 0;
 		
 		printf("\n\n*************************SYMBOL TABLES**************************");
-		printf("\nScope\tName\tType\t\tDeclaration\tLast Used Line\n");
+		printf("\nScope\tName\tType\t\tLine Decl\tLast Used Line\n");
 		for(i=0; i<=sIndex; i++)
 		{
 			for(j=0; j<symbolTables[i].noOfElems; j++)
@@ -280,6 +284,9 @@
 	
 	void freeAll()
 	{
+		ICG_opt();
+		printQuads();
+		printf("\n");
 		int i = 0, j = 0;
 		for(i=0; i<=sIndex; i++)
 		{
@@ -451,7 +458,7 @@
 		
 		if(flag==1) //if it's a variable
 		{
-				strcpy(tString, "T");
+				strcpy(tString, "t");
 				strcat(tString, A);
 				insertRecord("ICGTempVar", tString, -1, 0);
 				return tString;
@@ -497,7 +504,7 @@
 		if((!strcmp(node->nodeType, "Identifier")) || (!strcmp(node->nodeType, "Constant")))
 		{
 			//printf("\n%s", node->nodeType);
-			printf("T%d = %s\n", node->tempNo, node->lexeme);
+			printf("t%d = %s\n", node->tempNo, node->lexeme);
 			make_quad("=", node->lexeme,  "-", makeStr(node->tempNo, 1));
 			return;
 		}
@@ -505,7 +512,7 @@
 		if(!(strcmp(node->nodeType, "Print")))
 		{
 			ICG_main(node->child[0]);
-			printf("Print T%d\n", node->child[0]->tempNo);
+			printf("Print t%d\n", node->child[0]->tempNo);
 			make_quad("Print", makeStr(node->tempNo, 1), "-", "-");
 		}
 
@@ -529,7 +536,7 @@
 			strcpy(arg1, makeStr(node->child[0]->tempNo, 1));
 			strcpy(arg2, makeStr(node->child[1]->tempNo, 1));
 
-			printf("T%d = T%d %s T%d\n", node->tempNo, node->child[0]->tempNo, node->lexeme, node->child[1]->tempNo);
+			printf("t%d = t%d %s t%d\n", node->tempNo, node->child[0]->tempNo, node->lexeme, node->child[1]->tempNo);
 			make_quad(node->lexeme, arg1, arg2, res);
 			free(arg1);
 			free(arg2);
@@ -544,7 +551,7 @@
 				char *X2 = (char*)malloc(10);
 				strcpy(X1, makeStr(node->tempNo, 1));
 				strcpy(X2, makeStr(node->child[1]->tempNo, 1));
-				printf("T%d = %s T%d\n", node->tempNo, node->nodeType, node->child[1]->tempNo);
+				printf("t%d = %s t%d\n", node->tempNo, node->nodeType, node->child[1]->tempNo);
 				make_quad(node->nodeType , X2, "-", X1);	
 			}
 			
@@ -554,14 +561,14 @@
 		if(!strcmp(node->nodeType, "="))
 		{
 			ICG_main(node->child[1]);
-			printf("%s = T%d\n", node->child[0]->lexeme, node->child[1]->tempNo);
+			printf("%s = t%d\n", node->child[0]->lexeme, node->child[1]->tempNo);
 			make_quad(node->nodeType, makeStr(node->child[1]->tempNo, 1), "-",  node->child[0]->lexeme);
 			return;
 		}
 
 		if(!strcmp(node->nodeType, "ListIndex"))
 		{
-			printf("T%d = %s[%s]\n", node->tempNo, node->child[0]->lexeme, node->child[1]->lexeme);
+			printf("t%d = %s[%s]\n", node->tempNo, node->child[0]->lexeme, node->child[1]->lexeme);
 			make_quad("=[]", node->child[0]->lexeme, node->child[1]->lexeme, makeStr(node->tempNo, 1));
 			return;
 		}
@@ -582,7 +589,7 @@
 		{			
 			int temp = lIndex;
 			ICG_main(node->child[0]);
-			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex);
+			printf("If False t%d goto L%d\n", node->child[0]->tempNo, lIndex);
 			make_quad("If False",  makeStr(node->child[0]->tempNo, 1), "-", makeStr(temp, 0));
 			lIndex++;
 			ICG_main(node->child[1]);
@@ -608,7 +615,7 @@
 
 			int temp = lIndex;
 			ICG_main(node->child[0]);
-			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex);
+			printf("If False t%d goto L%d\n", node->child[0]->tempNo, lIndex);
 			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-", makeStr(temp, 0));				
 			ICG_main(node->child[1]);
 			printf("goto L%d\n", temp+1);
@@ -631,7 +638,7 @@
 		{
 			int temp = lIndex;
 			ICG_main(node->child[0]);
-			printf("L%d: If False T%d goto L%d\n", lIndex, node->child[0]->tempNo, lIndex+1);
+			printf("L%d: If False t%d goto L%d\n", lIndex, node->child[0]->tempNo, lIndex+1);
 			make_quad( "Label", "-", "-",makeStr(temp, 0));		
 			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-",makeStr(temp+1, 0) );								
 			lIndex+=2;			
@@ -674,19 +681,19 @@
 			printf("L%d: ", lIndex);
 
 			make_quad("<", loop_var, rangeEnd, makeStr(node->child[0]->tempNo,1)); //t=i<n
-			printf("T%d= %s<%s\n", node->child[0]->tempNo, loop_var, rangeEnd );
+			printf("t%d= %s<%s\n", node->child[0]->tempNo, loop_var, rangeEnd );
 			
 			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-",makeStr(temp+1, 0) );
 			//if condition is false, goto exit label				
-			printf("If False T%d goto L%d\n", node->child[0]->tempNo, lIndex+1);
+			printf("If False t%d goto L%d\n", node->child[0]->tempNo, lIndex+1);
 
 			lIndex+=2;			
 			ICG_main(node->child[1]);
 
 			//increment loop variable
-			printf("T%d = %s + 1\n", node->tempNo, loop_var);
+			printf("t%d = %s + 1\n", node->tempNo, loop_var);
 			make_quad("+", loop_var, "1", makeStr(node->tempNo,1));
-			printf("%s = T%d\n", loop_var, node->tempNo);
+			printf("%s = t%d\n", loop_var, node->tempNo);
 			make_quad("=", makeStr(node->tempNo,1), "-",  loop_var);
 			
 			printf("goto L%d\n", temp); //end of loop
@@ -715,7 +722,7 @@
 		{
 			if(!strcmp(node->child[1]->nodeType, "Void"))
 			{
-				printf("(T%d)Call Function %s\n", node->tempNo, node->child[0]->lexeme);
+				printf("(t%d)Call Function %s\n", node->tempNo, node->child[0]->lexeme);
 				make_quad("Call", node->child[0]->lexeme, "-", makeStr(node->tempNo, 1));
 			}
 			else
@@ -731,7 +738,7 @@
 				    token = strtok(NULL, ","); 
 				}
 				
-				printf("(T%d)Call Function %s, %d\n", node->tempNo, node->child[0]->lexeme, i);
+				printf("(t%d)Call Function %s, %d\n", node->tempNo, node->child[0]->lexeme, i);
 				sprintf(A, "%d", i);
 				make_quad("Call", node->child[0]->lexeme, A, makeStr(node->tempNo, 1));
 				printf("Pop Params for Function %s, %d\n", node->child[0]->lexeme, i);
@@ -742,6 +749,40 @@
 
 
 
+	}
+
+	int ICG_opt()
+	{
+		
+		int i = 0, j = 0, flag = 1, dont_remove=0;
+		while(flag==1)
+		{
+			
+			flag=0;
+			for(i=0; i<qIndex; i++)
+			{
+				dont_remove=0;
+				if(!((strcmp(all_quads[i].R, "-")==0) | (strcmp(all_quads[i].Op, "Call")==0) | (strcmp(all_quads[i].Op, "Label")==0) | (strcmp(all_quads[i].Op, "goto")==0) | (strcmp(all_quads[i].Op, "If False")==0)))
+				{
+					for(j=0; j<qIndex; j++)
+					{
+							if(((strcmp(all_quads[i].R, all_quads[j].A1)==0) && (all_quads[j].I!=-1)) | ((strcmp(all_quads[i].R, all_quads[j].A2)==0) && (all_quads[j].I!=-1)))
+							{
+								//if a particular 'T0' is used as arg1/arg2 in another quad entry
+								dont_remove=1; //keep the quad entry, don't remove it
+							}
+					}
+				
+					if((dont_remove==0) & (all_quads[i].I != -1))
+					{
+						//you're eliminating the quad, by not actually removing it just making its index = -1 so that it can never be printed via the print function
+						all_quads[i].I = -1;
+						flag=1;
+					}
+				}
+			}
+		}
+		return flag;
 	}
 		
 		
@@ -779,7 +820,7 @@ StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\
 printf("\n\n*********************************AST***********************************"); AST_print($2); printf("\n**************************************************************************\n");
 printf("\n\n***********************************ICG***********************************\n"); ICG_main($2);
 printf("**************************************************************************\n");
-printQuads($2); printSTable(); freeAll(); exit(0);} ;
+printQuads(); printSTable(); freeAll(); exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
 					  $$ = make_leaf($<text>1, "Constant");}

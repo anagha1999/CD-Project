@@ -2,9 +2,10 @@ x=5
 #this is a comment
 y=2
 z =[]
+#this loop below doesn't work with optimization
 for i in z:
-	print(x)
-	x= x+1
+	print(x) #will cause seg fault if x has not been declared!
+	x= x+1 
 
 for i in range(0,3):
 	y = y+1
