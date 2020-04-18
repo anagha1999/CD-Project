@@ -1,10 +1,10 @@
-x=5
+x=3
 #this is a comment
 y=2
-z =[]
-#this loop below doesn't work with optimization
+z =[1,2,3]
+
 for i in z:
-	print(x) #will cause seg fault if x has not been declared!
+	print(x)
 	x= x+1 
 
 for i in range(0,3):

@@ -146,7 +146,7 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 799 "code.y" /* yacc.c:1909  */
+#line 869 "code.y" /* yacc.c:1909  */
  char *text; int depth; struct AST *node; 
 
 #line 153 "y.tab.h" /* yacc.c:1909  */

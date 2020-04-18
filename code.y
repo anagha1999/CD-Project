@@ -31,6 +31,7 @@
 	void printQuads();
 
 	int ICG_opt(); //optimization code
+	int ICG_opt2(); //common sub expr eval
 
 
 	//-------------------------------------STRUCTURE DEFINITIONS----------------------------------------------
@@ -284,7 +285,13 @@
 	
 	void freeAll()
 	{
-		ICG_opt();
+		ICG_opt(); 
+		printf("\nAfter dead code elimination");
+
+		printQuads();
+		printf("\n");
+		printf("\nAfter common sub expression eimination");
+		ICG_opt2(); //CSE elimination
 		printQuads();
 		printf("\n");
 		int i = 0, j = 0;
@@ -513,7 +520,7 @@
 		{
 			ICG_main(node->child[0]);
 			printf("Print t%d\n", node->child[0]->tempNo);
-			make_quad("Print", makeStr(node->tempNo, 1), "-", "-");
+			make_quad("Print", makeStr(node->child[0]->tempNo, 1), "-", "-");
 		}
 
 		if(!strcmp(node->nodeType, "import"))
@@ -751,6 +758,26 @@
 
 	}
 
+	void replaceAll( char CSE[100][10], char* replaceStr, int CSE_len, int start_index)
+	{
+		for(int i=0; i<CSE_len; i++)
+		{
+			for(int j=start_index; j<qIndex; j++)
+			{
+				if( strcmp(all_quads[j].A1, CSE[i])==0)
+				{
+					strcpy(all_quads[j].A1,replaceStr);
+				}
+
+				if( strcmp(all_quads[j].A2, CSE[i])==0)
+				{
+					strcpy(all_quads[j].A2,replaceStr);
+				}
+
+			}
+		}
+	}
+
 	int ICG_opt()
 	{
 		
@@ -784,7 +811,50 @@
 		}
 		return flag;
 	}
+
+	int ICG_opt2()
+	{
 		
+		int i = 0, j = 0;
+			
+			for(i=0; i<qIndex; i++)
+			{
+				quad temp_quad = all_quads[i];
+				char CSEs[100][10];
+				int CSE_index=0;
+				
+				for(j=i+1; j<qIndex; j++)
+				{
+					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0) )
+					{
+						//check if the 2 quads have the same Op, A1 and A2
+						//Print stmts should be excluded to retain pgm logic
+						//printf("temp_quad.R=%s\n", temp_quad.R);
+
+						strcpy(CSEs[CSE_index],all_quads[j].R); 
+						//keep a copy of the CSE to replace in the rest of the table
+
+						all_quads[j].I=-1; //eliminate the CSE from all_quads (the entire row)
+
+						//printf("CSE: %s\n", CSEs[CSE_index]);
+						CSE_index++;
+
+
+					}
+					
+					if(CSE_index>0)
+					{
+						
+						//printf("CSE_index=%d\n", CSE_index);
+
+						replaceAll(CSEs,temp_quad.R,CSE_index,j); //occuring as A1 or A2
+						CSE_index=0;
+					}
+				}
+
+			}
+		
+	} 
 		
 
 	

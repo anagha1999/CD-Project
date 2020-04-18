@@ -96,6 +96,7 @@
 	void printQuads();
 
 	int ICG_opt(); //optimization code
+	int ICG_opt2(); //common sub expr eval
 
 
 	//-------------------------------------STRUCTURE DEFINITIONS----------------------------------------------
@@ -349,7 +350,13 @@
 	
 	void freeAll()
 	{
-		ICG_opt();
+		ICG_opt(); 
+		printf("\nAfter dead code elimination");
+
+		printQuads();
+		printf("\n");
+		printf("\nAfter common sub expression eimination");
+		ICG_opt2(); //CSE elimination
 		printQuads();
 		printf("\n");
 		int i = 0, j = 0;
@@ -578,7 +585,7 @@
 		{
 			ICG_main(node->child[0]);
 			printf("Print t%d\n", node->child[0]->tempNo);
-			make_quad("Print", makeStr(node->tempNo, 1), "-", "-");
+			make_quad("Print", makeStr(node->child[0]->tempNo, 1), "-", "-");
 		}
 
 		if(!strcmp(node->nodeType, "import"))
@@ -816,6 +823,26 @@
 
 	}
 
+	void replaceAll( char CSE[100][10], char* replaceStr, int CSE_len, int start_index)
+	{
+		for(int i=0; i<CSE_len; i++)
+		{
+			for(int j=start_index; j<qIndex; j++)
+			{
+				if( strcmp(all_quads[j].A1, CSE[i])==0)
+				{
+					strcpy(all_quads[j].A1,replaceStr);
+				}
+
+				if( strcmp(all_quads[j].A2, CSE[i])==0)
+				{
+					strcpy(all_quads[j].A2,replaceStr);
+				}
+
+			}
+		}
+	}
+
 	int ICG_opt()
 	{
 		
@@ -849,7 +876,50 @@
 		}
 		return flag;
 	}
+
+	int ICG_opt2()
+	{
 		
+		int i = 0, j = 0;
+			
+			for(i=0; i<qIndex; i++)
+			{
+				quad temp_quad = all_quads[i];
+				char CSEs[100][10];
+				int CSE_index=0;
+				
+				for(j=i+1; j<qIndex; j++)
+				{
+					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0) )
+					{
+						//check if the 2 quads have the same Op, A1 and A2
+						//Print stmts should be excluded to retain pgm logic
+						//printf("temp_quad.R=%s\n", temp_quad.R);
+
+						strcpy(CSEs[CSE_index],all_quads[j].R); 
+						//keep a copy of the CSE to replace in the rest of the table
+
+						all_quads[j].I=-1; //eliminate the CSE from all_quads (the entire row)
+
+						//printf("CSE: %s\n", CSEs[CSE_index]);
+						CSE_index++;
+
+
+					}
+					
+					if(CSE_index>0)
+					{
+						
+						//printf("CSE_index=%d\n", CSE_index);
+
+						replaceAll(CSEs,temp_quad.R,CSE_index,j); //occuring as A1 or A2
+						CSE_index=0;
+					}
+				}
+
+			}
+		
+	} 
 		
 
 	
@@ -857,7 +927,7 @@
 
 
 
-#line 861 "y.tab.c" /* yacc.c:339  */
+#line 931 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -993,10 +1063,10 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 799 "code.y" /* yacc.c:355  */
+#line 869 "code.y" /* yacc.c:355  */
  char *text; int depth; struct AST *node; 
 
-#line 1000 "y.tab.c" /* yacc.c:355  */
+#line 1070 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -1027,7 +1097,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 1031 "y.tab.c" /* yacc.c:358  */
+#line 1101 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -1331,16 +1401,16 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   819,   819,   819,   825,   827,   832,   837,   839,   840,
-     842,   843,   843,   844,   846,   847,   848,   849,   850,   851,
-     852,   853,   855,   856,   857,   858,   859,   860,   861,   867,
-     868,   869,   870,   871,   872,   873,   875,   877,   878,   879,
-     880,   882,   883,   885,   888,   889,   890,   892,   897,   902,
-     907,   915,   917,   918,   919,   921,   922,   923,   926,   927,
-     931,   932,   934,   936,   946,   951,   953,   954,   955,   956,
-     957,   957,   959,   960,   962,   962,   963,   965,   965,   967,
-     969,   969,   970,   972,   972,   975,   977,   988,   988,   988,
-     990,   990,   991,   991,   992,   992,   993,   995,   995
+       0,   889,   889,   889,   895,   897,   902,   907,   909,   910,
+     912,   913,   913,   914,   916,   917,   918,   919,   920,   921,
+     922,   923,   925,   926,   927,   928,   929,   930,   931,   937,
+     938,   939,   940,   941,   942,   943,   945,   947,   948,   949,
+     950,   952,   953,   955,   958,   959,   960,   962,   967,   972,
+     977,   985,   987,   988,   989,   991,   992,   993,   996,   997,
+    1001,  1002,  1004,  1006,  1016,  1021,  1023,  1024,  1025,  1026,
+    1027,  1027,  1029,  1030,  1032,  1032,  1033,  1035,  1035,  1037,
+    1039,  1039,  1040,  1042,  1042,  1045,  1047,  1058,  1058,  1058,
+    1060,  1060,  1061,  1061,  1062,  1062,  1063,  1065,  1065
 };
 #endif
 
@@ -2337,379 +2407,379 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 819 "code.y" /* yacc.c:1646  */
+#line 889 "code.y" /* yacc.c:1646  */
     {init();}
-#line 2343 "y.tab.c" /* yacc.c:1646  */
+#line 2413 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 819 "code.y" /* yacc.c:1646  */
+#line 889 "code.y" /* yacc.c:1646  */
     {printf("\nValid Python Syntax\n" ); printf("**************************************************************************\n");
 printf("\n\n*********************************AST***********************************"); AST_print((yyvsp[-1].node)); printf("\n**************************************************************************\n");
 printf("\n\n***********************************ICG***********************************\n"); ICG_main((yyvsp[-1].node));
 printf("**************************************************************************\n");
 printQuads(); printSTable(); freeAll(); exit(0);}
-#line 2353 "y.tab.c" /* yacc.c:1646  */
+#line 2423 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 825 "code.y" /* yacc.c:1646  */
+#line 895 "code.y" /* yacc.c:1646  */
     {insertRecord("Constant", (yyvsp[0].text), (yylsp[0]).first_line, currentScope);
 					  (yyval.node) = make_leaf((yyvsp[0].text), "Constant");}
-#line 2360 "y.tab.c" /* yacc.c:1646  */
+#line 2430 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 827 "code.y" /* yacc.c:1646  */
+#line 897 "code.y" /* yacc.c:1646  */
     {insertRecord("Constant", (yyvsp[0].text), (yylsp[0]).first_line, currentScope);
 		 			  (yyval.node) = make_leaf((yyvsp[0].text), "Constant");}
-#line 2367 "y.tab.c" /* yacc.c:1646  */
+#line 2437 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 832 "code.y" /* yacc.c:1646  */
+#line 902 "code.y" /* yacc.c:1646  */
     {
 									  checkList((yyvsp[-3].text), (yylsp[-3]).first_line, currentScope);
 									  (yyval.node) = make_node("ListIndex", "ListIndex", make_leaf((yyvsp[-3].text), "ListTypeID"), make_leaf((yyvsp[-1].text), "Constant"));
 									  }
-#line 2376 "y.tab.c" /* yacc.c:1646  */
+#line 2446 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 837 "code.y" /* yacc.c:1646  */
+#line 907 "code.y" /* yacc.c:1646  */
     { modifyRecordID("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); 
 		(yyval.node) = make_leaf((yyvsp[0].text),"Identifier");}
-#line 2383 "y.tab.c" /* yacc.c:1646  */
+#line 2453 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 839 "code.y" /* yacc.c:1646  */
+#line 909 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2389 "y.tab.c" /* yacc.c:1646  */
+#line 2459 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 840 "code.y" /* yacc.c:1646  */
+#line 910 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2395 "y.tab.c" /* yacc.c:1646  */
+#line 2465 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 842 "code.y" /* yacc.c:1646  */
+#line 912 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2401 "y.tab.c" /* yacc.c:1646  */
+#line 2471 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 843 "code.y" /* yacc.c:1646  */
+#line 913 "code.y" /* yacc.c:1646  */
     {resetDepth();}
-#line 2407 "y.tab.c" /* yacc.c:1646  */
+#line 2477 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 843 "code.y" /* yacc.c:1646  */
+#line 913 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("Start","NewLine", (yyvsp[-3].node), (yyvsp[0].node));}
-#line 2413 "y.tab.c" /* yacc.c:1646  */
+#line 2483 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 844 "code.y" /* yacc.c:1646  */
+#line 914 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[-1].node);}
-#line 2419 "y.tab.c" /* yacc.c:1646  */
+#line 2489 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 846 "code.y" /* yacc.c:1646  */
+#line 916 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2425 "y.tab.c" /* yacc.c:1646  */
+#line 2495 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 847 "code.y" /* yacc.c:1646  */
+#line 917 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2431 "y.tab.c" /* yacc.c:1646  */
+#line 2501 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 848 "code.y" /* yacc.c:1646  */
+#line 918 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2437 "y.tab.c" /* yacc.c:1646  */
+#line 2507 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 849 "code.y" /* yacc.c:1646  */
+#line 919 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2443 "y.tab.c" /* yacc.c:1646  */
+#line 2513 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 850 "code.y" /* yacc.c:1646  */
+#line 920 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2449 "y.tab.c" /* yacc.c:1646  */
+#line 2519 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 851 "code.y" /* yacc.c:1646  */
+#line 921 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2455 "y.tab.c" /* yacc.c:1646  */
+#line 2525 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 852 "code.y" /* yacc.c:1646  */
+#line 922 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2461 "y.tab.c" /* yacc.c:1646  */
+#line 2531 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 853 "code.y" /* yacc.c:1646  */
+#line 923 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2467 "y.tab.c" /* yacc.c:1646  */
+#line 2537 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 855 "code.y" /* yacc.c:1646  */
+#line 925 "code.y" /* yacc.c:1646  */
     { (yyval.node)=(yyvsp[0].node);}
-#line 2473 "y.tab.c" /* yacc.c:1646  */
+#line 2543 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 856 "code.y" /* yacc.c:1646  */
+#line 926 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("+","+",(yyvsp[-2].node), (yyvsp[0].node)); }
-#line 2479 "y.tab.c" /* yacc.c:1646  */
+#line 2549 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 857 "code.y" /* yacc.c:1646  */
+#line 927 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("-","-",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2485 "y.tab.c" /* yacc.c:1646  */
+#line 2555 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 858 "code.y" /* yacc.c:1646  */
+#line 928 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("*","*",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2491 "y.tab.c" /* yacc.c:1646  */
+#line 2561 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 859 "code.y" /* yacc.c:1646  */
+#line 929 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("/","/",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2497 "y.tab.c" /* yacc.c:1646  */
+#line 2567 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 860 "code.y" /* yacc.c:1646  */
+#line 930 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("temp","unary-", make_leaf("-", ""), (yyvsp[0].node));}
-#line 2503 "y.tab.c" /* yacc.c:1646  */
+#line 2573 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 861 "code.y" /* yacc.c:1646  */
+#line 931 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[-1].node);}
-#line 2509 "y.tab.c" /* yacc.c:1646  */
+#line 2579 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 867 "code.y" /* yacc.c:1646  */
+#line 937 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("or", "or", (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2515 "y.tab.c" /* yacc.c:1646  */
+#line 2585 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 868 "code.y" /* yacc.c:1646  */
+#line 938 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("<", "<",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2521 "y.tab.c" /* yacc.c:1646  */
+#line 2591 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 869 "code.y" /* yacc.c:1646  */
+#line 939 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("and","and", (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2527 "y.tab.c" /* yacc.c:1646  */
+#line 2597 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 870 "code.y" /* yacc.c:1646  */
+#line 940 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node(">",">",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2533 "y.tab.c" /* yacc.c:1646  */
+#line 2603 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 871 "code.y" /* yacc.c:1646  */
+#line 941 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("<=","<=", (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2539 "y.tab.c" /* yacc.c:1646  */
+#line 2609 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 872 "code.y" /* yacc.c:1646  */
+#line 942 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node(">=",">=",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2545 "y.tab.c" /* yacc.c:1646  */
+#line 2615 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 873 "code.y" /* yacc.c:1646  */
+#line 943 "code.y" /* yacc.c:1646  */
     {checkList((yyvsp[0].text), (yylsp[0]).first_line, currentScope); 
          (yyval.node) = make_node("in", "in", (yyvsp[-2].node), make_leaf((yyvsp[0].text), "Constant"));}
-#line 2552 "y.tab.c" /* yacc.c:1646  */
+#line 2622 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 875 "code.y" /* yacc.c:1646  */
+#line 945 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2558 "y.tab.c" /* yacc.c:1646  */
+#line 2628 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 877 "code.y" /* yacc.c:1646  */
+#line 947 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2564 "y.tab.c" /* yacc.c:1646  */
+#line 2634 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 878 "code.y" /* yacc.c:1646  */
+#line 948 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("==", "==",(yyvsp[-2].node), (yyvsp[0].node));}
-#line 2570 "y.tab.c" /* yacc.c:1646  */
+#line 2640 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 879 "code.y" /* yacc.c:1646  */
+#line 949 "code.y" /* yacc.c:1646  */
     {insertRecord("Constant", "True", (yylsp[0]).first_line, currentScope); (yyval.node) = make_leaf("True", "Constant");}
-#line 2576 "y.tab.c" /* yacc.c:1646  */
+#line 2646 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 880 "code.y" /* yacc.c:1646  */
+#line 950 "code.y" /* yacc.c:1646  */
     {insertRecord("Constant", "False", (yylsp[0]).first_line, currentScope); (yyval.node) = make_leaf("False", "Constant");}
-#line 2582 "y.tab.c" /* yacc.c:1646  */
+#line 2652 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 882 "code.y" /* yacc.c:1646  */
+#line 952 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("not", "not", make_leaf("", ""), (yyvsp[0].node));}
-#line 2588 "y.tab.c" /* yacc.c:1646  */
+#line 2658 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 883 "code.y" /* yacc.c:1646  */
+#line 953 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[-1].node);}
-#line 2594 "y.tab.c" /* yacc.c:1646  */
+#line 2664 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 885 "code.y" /* yacc.c:1646  */
+#line 955 "code.y" /* yacc.c:1646  */
     {insertRecord("PackageName", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); 
 							  (yyval.node) = make_node("import", "import", make_leaf((yyvsp[0].text), "PackageName"), make_leaf("", "") );}
-#line 2601 "y.tab.c" /* yacc.c:1646  */
+#line 2671 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 888 "code.y" /* yacc.c:1646  */
+#line 958 "code.y" /* yacc.c:1646  */
     {(yyval.node)=make_leaf("pass", "pass");}
-#line 2607 "y.tab.c" /* yacc.c:1646  */
+#line 2677 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 45:
-#line 889 "code.y" /* yacc.c:1646  */
+#line 959 "code.y" /* yacc.c:1646  */
     {(yyval.node)=make_leaf("break", "break");}
-#line 2613 "y.tab.c" /* yacc.c:1646  */
+#line 2683 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 46:
-#line 890 "code.y" /* yacc.c:1646  */
+#line 960 "code.y" /* yacc.c:1646  */
     {(yyval.node)=make_leaf("return", "return");}
-#line 2619 "y.tab.c" /* yacc.c:1646  */
+#line 2689 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 47:
-#line 893 "code.y" /* yacc.c:1646  */
+#line 963 "code.y" /* yacc.c:1646  */
     {
 			  insertRecord("Identifier", (yyvsp[-2].text), (yylsp[-2]).first_line, currentScope); 
 			  (yyval.node)=make_node("=","=",make_leaf((yyvsp[-2].text), "Identifier"),(yyvsp[0].node));
 			  }
-#line 2628 "y.tab.c" /* yacc.c:1646  */
+#line 2698 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 48:
-#line 898 "code.y" /* yacc.c:1646  */
+#line 968 "code.y" /* yacc.c:1646  */
     {
 			 	insertRecord("Identifier", (yyvsp[-2].text), (yylsp[-2]).first_line, currentScope);
 			 	(yyval.node) = make_node("=","=", make_leaf((yyvsp[-2].text), "Identifier"), (yyvsp[0].node));
 			 }
-#line 2637 "y.tab.c" /* yacc.c:1646  */
+#line 2707 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 903 "code.y" /* yacc.c:1646  */
+#line 973 "code.y" /* yacc.c:1646  */
     {
 			 	insertRecord("Identifier", (yyvsp[-2].text), (yylsp[-2]).first_line, currentScope);
 			 	(yyval.node) = make_node("=", "=",make_leaf((yyvsp[-2].text), "Identifier"), (yyvsp[0].node));
 			 }
-#line 2646 "y.tab.c" /* yacc.c:1646  */
+#line 2716 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 908 "code.y" /* yacc.c:1646  */
+#line 978 "code.y" /* yacc.c:1646  */
     {
 			 	insertRecord("ListTypeID", (yyvsp[-2].text), (yylsp[-2]).first_line, currentScope);
 			 	(yyval.node) = make_node("=", "ListDecl", make_leaf((yyvsp[-2].text), "ListTypeID"), (yyvsp[0].node));
 			 }
-#line 2655 "y.tab.c" /* yacc.c:1646  */
+#line 2725 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 915 "code.y" /* yacc.c:1646  */
+#line 985 "code.y" /* yacc.c:1646  */
     {(yyval.node)=make_node("Print", "Print", (yyvsp[-1].node), make_leaf("", ""));}
-#line 2661 "y.tab.c" /* yacc.c:1646  */
+#line 2731 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 921 "code.y" /* yacc.c:1646  */
+#line 991 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2667 "y.tab.c" /* yacc.c:1646  */
+#line 2737 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 922 "code.y" /* yacc.c:1646  */
+#line 992 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2673 "y.tab.c" /* yacc.c:1646  */
+#line 2743 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 923 "code.y" /* yacc.c:1646  */
+#line 993 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2679 "y.tab.c" /* yacc.c:1646  */
+#line 2749 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 58:
-#line 926 "code.y" /* yacc.c:1646  */
+#line 996 "code.y" /* yacc.c:1646  */
     {(yyval.node)= make_node("IF", "IF", (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2685 "y.tab.c" /* yacc.c:1646  */
+#line 2755 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 59:
-#line 928 "code.y" /* yacc.c:1646  */
+#line 998 "code.y" /* yacc.c:1646  */
     {(yyval.node)= make_node("IF-ELIF-ELSE", "IF-ELIF-ELSE", make_node("IF","IF", (yyvsp[-3].node), (yyvsp[-1].node)), (yyvsp[0].node));}
-#line 2691 "y.tab.c" /* yacc.c:1646  */
+#line 2761 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 60:
-#line 931 "code.y" /* yacc.c:1646  */
+#line 1001 "code.y" /* yacc.c:1646  */
     {(yyval.node)= (yyvsp[0].node);}
-#line 2697 "y.tab.c" /* yacc.c:1646  */
+#line 2767 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 61:
-#line 932 "code.y" /* yacc.c:1646  */
+#line 1002 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_for_node("ELIF", "ELIF", (yyvsp[-3].node), (yyvsp[-1].node), (yyvsp[0].node), make_leaf("",""));}
-#line 2703 "y.tab.c" /* yacc.c:1646  */
+#line 2773 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 62:
-#line 934 "code.y" /* yacc.c:1646  */
+#line 1004 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("ELSE","ELSE", (yyvsp[0].node), make_leaf("", ""));}
-#line 2709 "y.tab.c" /* yacc.c:1646  */
+#line 2779 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 63:
-#line 937 "code.y" /* yacc.c:1646  */
+#line 1007 "code.y" /* yacc.c:1646  */
     {
 				insertRecord("Identifier", (yyvsp[-4].text), (yylsp[-4]).first_line, currentScope); 
 				char rangeNodeText[20] ="";
@@ -2719,140 +2789,140 @@ printQuads(); printSTable(); freeAll(); exit(0);}
 				(yyval.node) =make_node("FOR", "FOR", make_leaf(rangeNodeText, argsList), (yyvsp[0].node));  
 				clearArgsList(); 
 			}
-#line 2723 "y.tab.c" /* yacc.c:1646  */
+#line 2793 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 64:
-#line 946 "code.y" /* yacc.c:1646  */
+#line 1016 "code.y" /* yacc.c:1646  */
     {
 		 insertRecord("Identifier", (yyvsp[-4].text), (yylsp[-4]).first_line, currentScope); 
 		 checkList((yyvsp[-2].text), (yylsp[-2]).first_line, currentScope);
 		 (yyval.node) =make_node("FOR", "FOR", make_leaf((yyvsp[-2].text), "Identifier"), (yyvsp[0].node));}
-#line 2732 "y.tab.c" /* yacc.c:1646  */
+#line 2802 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 65:
-#line 951 "code.y" /* yacc.c:1646  */
+#line 1021 "code.y" /* yacc.c:1646  */
     {(yyval.node) =make_node("WHILE","WHILE", (yyvsp[-2].node), (yyvsp[0].node));}
-#line 2738 "y.tab.c" /* yacc.c:1646  */
+#line 2808 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 66:
-#line 953 "code.y" /* yacc.c:1646  */
+#line 1023 "code.y" /* yacc.c:1646  */
     {addToList("0", 1); addToList((yyvsp[-1].text), 0); }
-#line 2744 "y.tab.c" /* yacc.c:1646  */
+#line 2814 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 67:
-#line 954 "code.y" /* yacc.c:1646  */
+#line 1024 "code.y" /* yacc.c:1646  */
     {addToList((yyvsp[-3].text), 1); addToList((yyvsp[-1].text), 0);}
-#line 2750 "y.tab.c" /* yacc.c:1646  */
+#line 2820 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 68:
-#line 955 "code.y" /* yacc.c:1646  */
+#line 1025 "code.y" /* yacc.c:1646  */
     {addToList((yyvsp[-5].text), 1); addToList((yyvsp[-3].text), 0);}
-#line 2756 "y.tab.c" /* yacc.c:1646  */
+#line 2826 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 69:
-#line 956 "code.y" /* yacc.c:1646  */
+#line 1026 "code.y" /* yacc.c:1646  */
     {(yyval.node)=(yyvsp[0].node);}
-#line 2762 "y.tab.c" /* yacc.c:1646  */
+#line 2832 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 70:
-#line 957 "code.y" /* yacc.c:1646  */
+#line 1027 "code.y" /* yacc.c:1646  */
     { initNewTable((yyvsp[0].depth)); updateCScope((yyvsp[0].depth));}
-#line 2768 "y.tab.c" /* yacc.c:1646  */
+#line 2838 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 71:
-#line 957 "code.y" /* yacc.c:1646  */
+#line 1027 "code.y" /* yacc.c:1646  */
     {(yyval.node) =make_node("start_suite", "BeginBlock", (yyvsp[-1].node), (yyvsp[0].node));}
-#line 2774 "y.tab.c" /* yacc.c:1646  */
+#line 2844 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 72:
-#line 959 "code.y" /* yacc.c:1646  */
+#line 1029 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("Next", "Next", (yyvsp[-1].node), (yyvsp[0].node));}
-#line 2780 "y.tab.c" /* yacc.c:1646  */
+#line 2850 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 73:
-#line 960 "code.y" /* yacc.c:1646  */
+#line 1030 "code.y" /* yacc.c:1646  */
     {(yyval.node) = (yyvsp[0].node);}
-#line 2786 "y.tab.c" /* yacc.c:1646  */
+#line 2856 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 74:
-#line 962 "code.y" /* yacc.c:1646  */
+#line 1032 "code.y" /* yacc.c:1646  */
     {updateCScope((yyvsp[0].depth));}
-#line 2792 "y.tab.c" /* yacc.c:1646  */
+#line 2862 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 75:
-#line 962 "code.y" /* yacc.c:1646  */
+#line 1032 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("", "EndBlock", (yyvsp[0].node), make_leaf("", ""));}
-#line 2798 "y.tab.c" /* yacc.c:1646  */
+#line 2868 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 76:
-#line 963 "code.y" /* yacc.c:1646  */
+#line 1033 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf("", ""); resetDepth();}
-#line 2804 "y.tab.c" /* yacc.c:1646  */
+#line 2874 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 77:
-#line 965 "code.y" /* yacc.c:1646  */
+#line 1035 "code.y" /* yacc.c:1646  */
     {insertRecord("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); addToList((yyvsp[0].text), 1);}
-#line 2810 "y.tab.c" /* yacc.c:1646  */
+#line 2880 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 78:
-#line 966 "code.y" /* yacc.c:1646  */
+#line 1036 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf(argsList, "argsList"); clearArgsList();}
-#line 2816 "y.tab.c" /* yacc.c:1646  */
+#line 2886 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 79:
-#line 967 "code.y" /* yacc.c:1646  */
+#line 1037 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf("", "Void");}
-#line 2822 "y.tab.c" /* yacc.c:1646  */
+#line 2892 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 80:
-#line 969 "code.y" /* yacc.c:1646  */
+#line 1039 "code.y" /* yacc.c:1646  */
     {insertRecord("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); addToList((yyvsp[0].text), 0);}
-#line 2828 "y.tab.c" /* yacc.c:1646  */
+#line 2898 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 82:
-#line 970 "code.y" /* yacc.c:1646  */
+#line 1040 "code.y" /* yacc.c:1646  */
     {addToList("",0);}
-#line 2834 "y.tab.c" /* yacc.c:1646  */
+#line 2904 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 83:
-#line 972 "code.y" /* yacc.c:1646  */
+#line 1042 "code.y" /* yacc.c:1646  */
     {insertRecord("Func_Name", (yyvsp[0].text), (yylsp[0]).first_line, currentScope);}
-#line 2840 "y.tab.c" /* yacc.c:1646  */
+#line 2910 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 84:
-#line 973 "code.y" /* yacc.c:1646  */
+#line 1043 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_for_node("Func_def", "Func_Name", make_leaf((yyvsp[-6].text), "Func_Name"), (yyvsp[-3].node), (yyvsp[0].node), make_leaf("",""));}
-#line 2846 "y.tab.c" /* yacc.c:1646  */
+#line 2916 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 85:
-#line 975 "code.y" /* yacc.c:1646  */
+#line 1045 "code.y" /* yacc.c:1646  */
     { (yyval.node) = make_leaf("[]", ""); }
-#line 2852 "y.tab.c" /* yacc.c:1646  */
+#line 2922 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 86:
-#line 977 "code.y" /* yacc.c:1646  */
+#line 1047 "code.y" /* yacc.c:1646  */
     {
 			 	char* str = (char *)malloc(102*sizeof(char));
 			 	strcpy(str,"[");
@@ -2863,71 +2933,71 @@ printQuads(); printSTable(); freeAll(); exit(0);}
 			 	(yyval.node) = make_leaf(str, ""); 
 			 	clearArgsList(); 
 			 	free(str);}
-#line 2867 "y.tab.c" /* yacc.c:1646  */
+#line 2937 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 87:
-#line 988 "code.y" /* yacc.c:1646  */
+#line 1058 "code.y" /* yacc.c:1646  */
     {addToList((yyvsp[0].node)->lexeme, 0);}
-#line 2873 "y.tab.c" /* yacc.c:1646  */
+#line 2943 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 90:
-#line 990 "code.y" /* yacc.c:1646  */
+#line 1060 "code.y" /* yacc.c:1646  */
     {modifyRecordID("Identifier", (yyvsp[0].text), (yylsp[0]).first_line, currentScope); addToList((yyvsp[0].text), 1);}
-#line 2879 "y.tab.c" /* yacc.c:1646  */
+#line 2949 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 91:
-#line 990 "code.y" /* yacc.c:1646  */
+#line 1060 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf(argsList,"argsList"); }
-#line 2885 "y.tab.c" /* yacc.c:1646  */
+#line 2955 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 92:
-#line 991 "code.y" /* yacc.c:1646  */
+#line 1061 "code.y" /* yacc.c:1646  */
     {addToList((yyvsp[0].text), 1);}
-#line 2891 "y.tab.c" /* yacc.c:1646  */
+#line 2961 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 93:
-#line 991 "code.y" /* yacc.c:1646  */
+#line 1061 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf(argsList,"argsList"); }
-#line 2897 "y.tab.c" /* yacc.c:1646  */
+#line 2967 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 94:
-#line 992 "code.y" /* yacc.c:1646  */
+#line 1062 "code.y" /* yacc.c:1646  */
     {addToList((yyvsp[0].text), 1);}
-#line 2903 "y.tab.c" /* yacc.c:1646  */
+#line 2973 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 95:
-#line 992 "code.y" /* yacc.c:1646  */
+#line 1062 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf(argsList,"argsList"); }
-#line 2909 "y.tab.c" /* yacc.c:1646  */
+#line 2979 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 96:
-#line 993 "code.y" /* yacc.c:1646  */
+#line 1063 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_leaf("","Void");}
-#line 2915 "y.tab.c" /* yacc.c:1646  */
+#line 2985 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 97:
-#line 995 "code.y" /* yacc.c:1646  */
+#line 1065 "code.y" /* yacc.c:1646  */
     {modifyRecordID("Func_Name", (yyvsp[0].text), (yylsp[0]).first_line, currentScope);}
-#line 2921 "y.tab.c" /* yacc.c:1646  */
+#line 2991 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 98:
-#line 995 "code.y" /* yacc.c:1646  */
+#line 1065 "code.y" /* yacc.c:1646  */
     {(yyval.node) = make_node("Func_Call", "Func_Call",make_leaf((yyvsp[-4].text), "Func_Name"), (yyvsp[-1].node));}
-#line 2927 "y.tab.c" /* yacc.c:1646  */
+#line 2997 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 2931 "y.tab.c" /* yacc.c:1646  */
+#line 3001 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -3162,7 +3232,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 997 "code.y" /* yacc.c:1906  */
+#line 1067 "code.y" /* yacc.c:1906  */
 
 
 void yyerror(const char *msg)
