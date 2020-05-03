@@ -61,6 +61,8 @@
 	//--------------------------------------------------------------------------------------------------------
 	
 	//------------------------------------SYMBOL TABLE FUNCTIONS----------------------------------------------
+	void insertRecord(const char* type, const char *name, int lineNo, int scope);
+
 	int power(int base, int exp)
 	{
 		int i =0, res = 1;
@@ -151,6 +153,10 @@
 				}	
 			}
 			printf("\nIdentifier '%s' at line %d Not Declared\n", name, yylineno);
+
+			//Error Recovery
+			insertRecord(type, name, lineNo, scope);
+
 			yyerror("Invalid Python Syntax");
 			//printSTable();
 			check_error =1;
@@ -214,6 +220,7 @@
 				else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 				{
 					printf("\nIdentifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
+					insertRecord("ListTypeID", name, lineNo, currentScope);
 					yyerror("Invalid Python Syntax");
 					return;
 					//exit(1);
@@ -222,6 +229,7 @@
 
 			}
 			printf("\nIdentifier '%s' at line %d Not Declared as an Indexable Type or has not been declared as a list\n", name, yylineno);
+			insertRecord("ListTypeID", name, lineNo, currentScope);
 			yyerror("Invalid Python Syntax");
 			return;
 			//exit(1);
@@ -238,6 +246,7 @@
 			else if(strcmp(symbolTables[index].Elements[i].name, name)==0)
 			{
 				printf("Identifier '%s' at line %d Not Indexable or has not been declared as a list\n", name, yylineno);
+				insertRecord("ListTypeID", name, lineNo, currentScope);
 				yyerror("Invalid Python Syntax");
 				return;
 				//exit(1);
@@ -1072,8 +1081,8 @@ void yyerror(const char *msg)
 	//printf("\n\n%s", msg);
 	printf("\nSyntax Error at Line %d, Column : %d\n",  yylineno, yylloc.last_column);
 	printf("**************************************************************************\n");
-	printSTable();
+	//printSTable();
 	printf("**************************************************************************\n");
-	exit(0);
+	//exit(0);
 }
 
