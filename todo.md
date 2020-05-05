@@ -9,7 +9,7 @@
  + goto
 
 + Conversion from TAC to ASM done
- + =, +, -, <, <=, >, >=, ==
+ + =, +, -, <, <=, >, >=, ==, !=
  + If False
  + List Indexing
 

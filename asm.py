@@ -50,6 +50,8 @@ with open('TAC.csv') as csvfile:
 			code[currentFunction].append(["IfFalse pending", "SUB", row[4], row[2], row[3], "BLEZ"])
 		if(row[1] == "=="):
 			code[currentFunction].append(["IfFalse pending", "SUB", row[4], row[2], row[3], "BEQ"])
+		if(row[1] == "!="):
+			code[currentFunction].append(["IfFalse pending", "SUB", row[4], row[2], row[3], "BNE"])
 		if(row[1] == "If False"):
 			for i in reversed(code[currentFunction]):
 				#reverse search to handle nested if-else's or nested loops
