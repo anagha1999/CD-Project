@@ -1,13 +1,7 @@
 Line No,Op,Arg1,Arg2,Res
-0,=,3,-,t0
-1,=,t0,-,a
-2,=,4,-,t3
-3,unary-,t3,-,t5
-4,=,t5,-,b
-5,=,a,-,t8
-6,=,b,-,t9
-7,<=,t8,t9,t10
-8,If False,t10,-,L0
-9,=,"hi",-,t11
-10,Print,t11,-,-
-11,Label,-,-,L0
+5,=,True,-,t8
+6,=,False,-,t9
+7,or,t8,t9,t10
+8,=,t10,-,x
+9,=,x,-,t13
+10,Print,t13,-,-

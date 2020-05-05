@@ -18,14 +18,18 @@ with open('TAC.csv') as csvfile:
 			continue
 		if(row[1] == "="):
 			if(re.search(tVarRegEx,row[4])):
+				#if result = temp variable
 				if(row[2].isdigit()):
+					#if you're moving a constant into a temp variable
 					code[currentFunction].append(["MOV", row[4], row[2]])
 					continue
 				else:
+					#you're loading some other variable value(from memory) into a temp variable
 					code[currentFunction].append(["LD", row[4], row[2]])
 					continue
 			if(re.search(IDRegEx, row[4])):
-					code[currentFunction].append(["ST", row[4], row[2]])
+				#if result = variable, you're storing a value in the memory
+				code[currentFunction].append(["ST", row[4], row[2]])
 		if(row[1] == "+"):
 			code[currentFunction].append(["ADD", row[4],row[2],row[3]])
 		if(row[1] == "binary-"):
@@ -55,11 +59,15 @@ with open('TAC.csv') as csvfile:
 		if(row[1] == "If False"):
 			for i in reversed(code[currentFunction]):
 				#reverse search to handle nested if-else's or nested loops
-				#
 				if("IfFalse pending" in i):
 					i.remove("IfFalse pending")
 					code[currentFunction].append([i[-1], i[1], row[4]])
 					i.remove(i[-1])
+		if(row[1] == "Label"):
+			code[currentFunction].append([row[4]]+ ":")
+		if(row[1] == "goto"):
+			code[currentFunction].append(["BR", row[4]])
+		
 		
 
 print(code)
