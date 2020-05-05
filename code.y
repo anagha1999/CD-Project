@@ -32,6 +32,7 @@
 
 	int ICG_opt(); //optimization code
 	int ICG_opt2(); //common sub expr eval
+	void createCSV(); //Write final ICG to a CSV for assembly code generation
 
 
 	//-------------------------------------STRUCTURE DEFINITIONS----------------------------------------------
@@ -299,10 +300,11 @@
 
 		printQuads();
 		printf("\n");
-		printf("\nAfter common sub expression eimination");
+		printf("\nAfter common sub expression elimination");
 		ICG_opt2(); //CSE elimination
 		printQuads();
 		printf("\n");
+		createCSV();
 		int i = 0, j = 0;
 		for(i=0; i<=sIndex; i++)
 		{
@@ -453,6 +455,8 @@
 		{
 			if(all_quads[i].I > -1)
 				printf("%d\t\t%s\t\t%s\t\t%s\t\t%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
+				//create_icg_csv(all_quads[i].Op,all_quads[i].A1, all_quads[i].A2, all_quads[i].R );
+
 		}
 		printf("**************************************************************************\n");
 	}
@@ -490,7 +494,7 @@
 
 	int checkIfBinOperator(char *Op)
 	{
-		if((!strcmp(Op, "+")) || (!strcmp(Op, "-"))|| (!strcmp(Op, "*")) || (!strcmp(Op, "/")) || (!strcmp(Op, ">=")) || (!strcmp(Op, "<=")) || (!strcmp(Op, "<")) || (!strcmp(Op, ">")) || 
+		if((!strcmp(Op, "+")) || (!strcmp(Op, "binary-"))|| (!strcmp(Op, "*")) || (!strcmp(Op, "/")) || (!strcmp(Op, ">=")) || (!strcmp(Op, "<=")) || (!strcmp(Op, "<")) || (!strcmp(Op, ">")) || 
 			 (!strcmp(Op, "in")) || (!strcmp(Op, "==")) || (!strcmp(Op, "and")) || (!strcmp(Op, "or")))
 			{
 				return 1;
@@ -553,6 +557,7 @@
 			strcpy(arg2, makeStr(node->child[1]->tempNo, 1));
 
 			printf("t%d = t%d %s t%d\n", node->tempNo, node->child[0]->tempNo, node->lexeme, node->child[1]->tempNo);
+			//printf("\nTEST: node->lexeme =%s", node->lexeme);
 			make_quad(node->lexeme, arg1, arg2, res);
 			free(arg1);
 			free(arg2);
@@ -864,7 +869,33 @@
 			}
 		
 	} 
-		
+
+
+	
+	
+
+
+
+	void createCSV()
+	{
+		FILE *fp;
+		char *filename;
+		filename = "TAC.csv";
+		fp=fopen(filename,"w+");
+		printf("\nWriting to file\n");
+		int i = 0;
+		fprintf(fp, "Line No,Op,Arg1,Arg2,Res\n");
+		for(i=0; i<qIndex; i++)
+		{
+			if(all_quads[i].I > -1)
+				fprintf(fp, "%d,%s,%s,%s,%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
+				//create_icg_csv(all_quads[i].Op,all_quads[i].A1, all_quads[i].A2, all_quads[i].R );
+
+		}
+		fclose(fp);
+
+		printf("\n %sfile created",filename);
+	}
 
 	
 
@@ -899,7 +930,7 @@ StartDebugger : {init();} StartParse T_EndOfFile {printf("\nValid Python Syntax\
 printf("\n\n*********************************AST***********************************"); AST_print($2); printf("\n**************************************************************************\n");
 printf("\n\n***********************************ICG***********************************\n"); ICG_main($2);
 printf("**************************************************************************\n");
-printQuads(); printSTable(); freeAll(); exit(0);} ;
+printQuads(); printSTable(); freeAll();  exit(0);} ;
 
 constant : T_Number {insertRecord("Constant", $<text>1, @1.first_line, currentScope);
 					  $$ = make_leaf($<text>1, "Constant");}
@@ -912,6 +943,7 @@ list_index : T_ID T_OB T_Number T_CB {
 									  checkList($<text>1, @1.first_line, currentScope);
 									  $$ = make_node("ListIndex", "ListIndex", make_leaf($<text>1, "ListTypeID"), make_leaf($3, "Constant"));
 									  };
+
 
 term : T_ID { modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
 		$$ = make_leaf($<text>1,"Identifier");} 
@@ -933,7 +965,7 @@ basic_stmt : pass_stmt {$$=$1;}
 
 arith_exp :  term { $$=$1;}
 			| arith_exp  T_PL  arith_exp {$$ = make_node("+","+",$1, $3); }
-			| arith_exp  T_MN  arith_exp {$$ = make_node("-","-",$1, $3);}
+			| arith_exp  T_MN  arith_exp {$$ = make_node("binary-","binary-",$1, $3);}
 			| arith_exp  T_ML  arith_exp {$$ = make_node("*","*",$1, $3);}
  			| arith_exp  T_DV  arith_exp {$$ = make_node("/","/",$1, $3);}
  			| T_MN term {$$ = make_node("temp","unary-", make_leaf("-", ""), $2);}
