@@ -10,8 +10,9 @@ currentFunction ="main"
 labelNum = 0
 #code[".word"] = []
 code[currentFunction]=[]
-with open('TAC.csv') as csvfile:
-	inp = csv.reader(csvfile, delimiter=',')
+code[".data"] =[]
+with open('TAC.tsv') as csvfile:
+	inp = csv.reader(csvfile, delimiter='\t')
 	for row in inp:
 		if(flag==0):
 			flag =1 
@@ -29,7 +30,10 @@ with open('TAC.csv') as csvfile:
 					continue
 			if(re.search(IDRegEx, row[4])):
 				#if result = variable, you're storing a value in the memory
+				code[".data"].append([row[4]+ ": "+ ".word"])
 				code[currentFunction].append(["ST", row[4], row[2]])
+		if(row[1]=="ListDecl"):
+			code[".data"].append([row[4]+ ": "+ ".BLKW  " + row[2]])
 		if(row[1] == "+"):
 			code[currentFunction].append(["ADD", row[4],row[2],row[3]])
 		if(row[1] == "binary-"):
@@ -64,10 +68,10 @@ with open('TAC.csv') as csvfile:
 					code[currentFunction].append([i[-1], i[1], row[4]])
 					i.remove(i[-1])
 		if(row[1] == "Label"):
-			code[currentFunction].append([row[4]]+ ":")
+			code[currentFunction].append([row[4]+ ":"])
 		if(row[1] == "goto"):
 			code[currentFunction].append(["BR", row[4]])
 		
-		
+#add code to finally remove the "IfFalse Pending" statements and store the result row[4]
 
 print(code)

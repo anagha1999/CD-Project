@@ -138,6 +138,7 @@
 		
 	void modifyRecordID(const char *type, const char *name, int lineNo, int scope)
 	{
+		//printf("\n In modifyRecordID");
 		int check_error = 0;
 		int i =0;
 		int index = scopeBasedTableSearch(scope);
@@ -749,8 +750,10 @@
 			else
 			{
 				char A[10];
+				//printf("TEST: node->child[1]->lexeme = %s\n", node->child[1]->lexeme);
+
 				char* token = strtok(node->child[1]->lexeme, ","); 
-  				int i = 0;
+				  				int i = 0;
 				while (token != NULL) 
 				{
 						i++; 
@@ -763,7 +766,7 @@
 				sprintf(A, "%d", i);
 				make_quad("Call", node->child[0]->lexeme, A, makeStr(node->tempNo, 1));
 				printf("Pop Params for Function %s, %d\n", node->child[0]->lexeme, i);
-								
+				strcpy(A, "");				
 				return;
 			}
 		}		
@@ -839,7 +842,7 @@
 				
 				for(j=i+1; j<qIndex; j++)
 				{
-					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0) )
+					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0)&& (strcmp(temp_quad.Op,"Param")!=0) )
 					{
 						//check if the 2 quads have the same Op, A1 and A2
 						//Print stmts should be excluded to retain pgm logic
@@ -880,15 +883,15 @@
 	{
 		FILE *fp;
 		char *filename;
-		filename = "TAC.csv";
+		filename = "TAC.tsv";
 		fp=fopen(filename,"w+");
 		printf("\nWriting to file\n");
 		int i = 0;
-		fprintf(fp, "Line No,Op,Arg1,Arg2,Res\n");
+		fprintf(fp, "Line No\tOp\tArg1\tArg2\tRes\n");
 		for(i=0; i<qIndex; i++)
 		{
 			if(all_quads[i].I > -1)
-				fprintf(fp, "%d,%s,%s,%s,%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
+				fprintf(fp, "%d\t%s\t%s\t%s\t%s\n", all_quads[i].I, all_quads[i].Op, all_quads[i].A1, all_quads[i].A2, all_quads[i].R);
 				//create_icg_csv(all_quads[i].Op,all_quads[i].A1, all_quads[i].A2, all_quads[i].R );
 
 		}
@@ -961,7 +964,8 @@ basic_stmt : pass_stmt {$$=$1;}
 			| arith_exp {$$=$1;} 
 			| bool_exp {$$=$1;} 
 			| print_stmt {$$=$1;}
-			| return_stmt {$$=$1;} ; 
+			| return_stmt {$$=$1;}
+			| func_call {$$=$1;} ; 
 
 arith_exp :  term { $$=$1;}
 			| arith_exp  T_PL  arith_exp {$$ = make_node("+","+",$1, $3); }
@@ -1027,7 +1031,8 @@ print_stmt : T_Print T_OP term T_CP {$$=make_node("Print", "Print", $3, make_lea
 
 finalStatements : basic_stmt  
 				| cmpd_stmt 
-				| func_def ;
+				| func_def 
+				;
 
 cmpd_stmt : if_stmt {$$ = $1;} 
 			| while_stmt {$$ = $1;}
@@ -1099,8 +1104,8 @@ list_stmt: T_OB T_CB { $$ = make_leaf("[]", ""); }
 call_list : T_Comma term {addToList($2->lexeme, 0);} call_list | ;
 
 call_args : T_ID {modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }
-					| T_Number {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }
-					| T_String {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); }	
+					| T_Number {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); clearArgsList();}
+					| T_String {addToList($<text>1, 1);} call_list {$$ = make_leaf(argsList,"argsList"); clearArgsList();}	
 					| {$$ = make_leaf("","Void");};
 
 func_call : T_ID {modifyRecordID("Func_Name", $<text>1, @1.first_line, currentScope);}T_OP call_args T_CP {$$ = make_node("Func_Call", "Func_Call",make_leaf($<text>1, "Func_Name"), $4);};

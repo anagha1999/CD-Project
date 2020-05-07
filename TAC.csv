@@ -1,7 +1,0 @@
-Line No,Op,Arg1,Arg2,Res
-5,=,True,-,t8
-6,=,False,-,t9
-7,or,t8,t9,t10
-8,=,t10,-,x
-9,=,x,-,t13
-10,Print,t13,-,-

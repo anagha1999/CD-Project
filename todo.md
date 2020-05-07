@@ -3,8 +3,7 @@
 + Conversion from TAC to ASM to do 
  + in, or, and
  + Print, import
- + List Declaration
- + BeginF, EndF
+ + BeginF, EndF, Param, Call
 
 
 + Conversion from TAC to ASM done
@@ -13,6 +12,8 @@
  + List Indexing
  + goto
  + Labels
+ + List Declaration
+ + Handle Recursion (need to make changes to yacc file)
 
 + Doubts:
  + How to use $sp, $fp to handle function declarations, calls

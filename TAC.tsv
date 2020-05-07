@@ -1,0 +1,7 @@
+Line No	Op	Arg1	Arg2	Res
+0	BeginF	abc	-	-
+5	EndF	abc	-	-
+8	Param	3	-	-
+9	Param	 4	-	-
+10	Param	 c	-	-
+11	Call	abc	3	t18
