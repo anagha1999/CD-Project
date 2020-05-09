@@ -3,7 +3,7 @@
 + Conversion from TAC to ASM to do 
  + in, 
  + or, and
- + Print, import
+ + import
 
 
 + Conversion from TAC to ASM done
@@ -15,8 +15,8 @@
  + List Declaration
  + Handle Recursion (need to make changes to yacc file)
  + BeginF, EndF, Param, Call
+ + Print
 
 + Doubts:
- + How to use $sp, $fp to handle function declarations, calls
  + Should we have a fixed set of registers?
- + How to handle print/import statements? Do we use syscall? Should the value be loaded into a special register?
+ + How to handle import statements? 

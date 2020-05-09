@@ -175,6 +175,12 @@ with open('TAC.tsv') as csvfile:
 			code[currentFunction].append([funcLoc[currentFunction][0],"ADD", "$sp", "$sp", "20"])
 			updatefuncLoc(["$sp", "$sp", "20"])
 
+		if(row[1]=="Print"):
+			code[currentFunction].append([funcLoc[currentFunction][0], "MOV", "R0", row[2]])
+			updatefuncLoc(["MOV", "R0", row[2]])
+			code[currentFunction].append([funcLoc[currentFunction][0], "SYSCALL"])
+			funcLoc[currentFunction][0]+=4
+
 
 
 
