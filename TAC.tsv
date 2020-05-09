@@ -1,7 +1,25 @@
 Line No	Op	Arg1	Arg2	Res
-0	BeginF	abc	-	-
-5	EndF	abc	-	-
-8	Param	3	-	-
-9	Param	 4	-	-
-10	Param	 c	-	-
-11	Call	abc	3	t18
+0	BeginF	p	-	-
+1	=	"fn s()"	-	t1
+2	Print	t1	-	-
+3	EndF	p	-	-
+4	BeginF	s	-	-
+5	Call	p	-	t12
+6	EndF	s	-	-
+7	BeginF	q	-	-
+8	=	i	-	t19
+9	=	0	-	t20
+10	==	t19	t20	t21
+11	If False	t21	-	L0
+13	=	1	-	t23
+14	binary-	t19	t23	t24
+15	=	t24	-	x
+16	Param	x	-	-
+17	Call	q	1	t29
+18	Call	s	-	t32
+19	Label	-	-	L0
+20	EndF	q	-	-
+21	=	5	-	t43
+22	=	t43	-	y
+23	Param	y	-	-
+24	Call	q	1	t48

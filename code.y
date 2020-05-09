@@ -842,7 +842,7 @@
 				
 				for(j=i+1; j<qIndex; j++)
 				{
-					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0)&& (strcmp(temp_quad.Op,"Param")!=0) )
+					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0)&& (strcmp(temp_quad.Op,"Param")!=0) && (strcmp(temp_quad.Op,"Call")!=0) )
 					{
 						//check if the 2 quads have the same Op, A1 and A2
 						//Print stmts should be excluded to retain pgm logic
@@ -955,7 +955,7 @@ term : T_ID { modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope
 
 StartParse : T_NL StartParse {$$=$2;}
 			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start","NewLine", $1, $4);} 
-			| finalStatements T_NL {$$=$1;};
+			| finalStatements {$$=$1;};
 
 basic_stmt : pass_stmt {$$=$1;} 
 			| break_stmt {$$=$1;} 
@@ -1080,13 +1080,13 @@ end_suite : DD {updateCScope($<depth>1);} finalStatements {$$ = make_node("", "E
 
 args : T_ID {insertRecord("Identifier", $<text>1, @1.first_line, currentScope); addToList($<text>1, 1);}
  args_list {$$ = make_leaf(argsList, "argsList"); clearArgsList();} 
-     | {$$ = make_leaf("", "Void");};
+     | {$$ = make_leaf("", "Void"); clearArgsList();};
 
 args_list : T_Comma T_ID {insertRecord("Identifier", $<text>2, @2.first_line, currentScope); addToList($<text>2, 0);} args_list 
-			| {addToList("",0);};
+			| {addToList("",0); clearArgsList();};
 
 func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args
- T_CP T_Cln start_suite {$$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2, "Func_Name"), $5, $8, make_leaf("",""));};
+ T_CP T_Cln start_suite {clearArgsList(); $$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2, "Func_Name"), $5, $8, make_leaf("",""));};
 
 list_stmt: T_OB T_CB { $$ = make_leaf("[]", ""); } 
 		 |	

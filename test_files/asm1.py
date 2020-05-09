@@ -6,5 +6,6 @@ if(a<b):
 else:
 	print(b)
 
+a = a + 4
 x=[1,2,3]
 print(x)

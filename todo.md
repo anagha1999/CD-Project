@@ -1,9 +1,9 @@
 # For assemble code generation
 
 + Conversion from TAC to ASM to do 
- + in, or, and
+ + in, 
+ + or, and
  + Print, import
- + BeginF, EndF, Param, Call
 
 
 + Conversion from TAC to ASM done
@@ -14,6 +14,7 @@
  + Labels
  + List Declaration
  + Handle Recursion (need to make changes to yacc file)
+ + BeginF, EndF, Param, Call
 
 + Doubts:
  + How to use $sp, $fp to handle function declarations, calls
