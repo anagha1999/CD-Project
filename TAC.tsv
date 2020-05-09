@@ -1,25 +1,17 @@
 Line No	Op	Arg1	Arg2	Res
-0	BeginF	p	-	-
-1	=	"fn s()"	-	t1
-2	Print	t1	-	-
-3	EndF	p	-	-
-4	BeginF	s	-	-
-5	Call	p	-	t12
-6	EndF	s	-	-
-7	BeginF	q	-	-
-8	=	i	-	t19
-9	=	0	-	t20
-10	==	t19	t20	t21
-11	If False	t21	-	L0
-13	=	1	-	t23
-14	binary-	t19	t23	t24
-15	=	t24	-	x
-16	Param	x	-	-
-17	Call	q	1	t29
-18	Call	s	-	t32
-19	Label	-	-	L0
-20	EndF	q	-	-
-21	=	5	-	t43
-22	=	t43	-	y
-23	Param	y	-	-
-24	Call	q	1	t48
+0	BeginF	abc	-	-
+1	=	a	-	t1
+2	=	b	-	t2
+3	+	t1	t2	t3
+4	=	t3	-	c
+5	EndF	abc	-	-
+6	=	5	-	t11
+7	=	t11	-	c
+8	=	c	-	t14
+9	Print	t14	-	-
+10	Param	3	-	-
+11	Param	 4	-	-
+12	Param	 c	-	-
+13	Call	abc	3	t21
+14	=	"new value:"	-	t22
+15	Print	t22	-	-

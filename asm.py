@@ -35,6 +35,8 @@ def updatefuncLoc(arr):
 		if(el.isdigit()):
 			funcLoc[currentFunction][0]+=4
 
+
+
 with open('TAC.tsv') as csvfile:
 	inp = csv.reader(csvfile, delimiter='\t')
 	for row in inp:
@@ -56,9 +58,19 @@ with open('TAC.tsv') as csvfile:
 					continue
 			if(re.search(IDRegEx, row[4])):
 				#if result = variable, you're storing a value in the memory
-				code[".data"].append([row[4]+ ": "+ ".word"])
 				code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4], row[2]])
 				funcLoc[currentFunction][0]+=8
+
+				#adding to .data section + preventing repeat additions of the same variable
+				toAppend = [row[4]+ ": "+ ".word"]
+				flag2=0
+				for el in code[".data"]:
+					if(el == toAppend):
+						flag2=1
+						break
+				if(flag2==0):
+					code[".data"].append([row[4]+ ": "+ ".word"])
+				
 		if(row[1]=="ListDecl"):
 			code[".data"].append([row[4]+ ": "+ ".BLKW  " + row[2]])
 		if(row[1] == "+"):
@@ -122,7 +134,11 @@ with open('TAC.tsv') as csvfile:
 			code[currentFunction].append([funcLoc[currentFunction][0], row[2]+ ":"])
 
 		if(row[1]== "EndF"):
-			#code[currentFunction].append([funcLoc[currentFunction][0], "BR", "0($sp)"])
+
+			#return back to the CALLER
+			code[currentFunction].append([funcLoc[currentFunction][0],"BR", "0($sp)"])
+			updatefuncLoc(["0($sp)"])
+
 			currentFunction = "main"
 			#no support for nested function definitions
 
@@ -159,10 +175,6 @@ with open('TAC.tsv') as csvfile:
 			code[currentFunction].append([funcLoc[currentFunction][0],"ADD", "$sp", "$sp", "20"])
 			updatefuncLoc(["$sp", "$sp", "20"])
 
-			if(currentFunction!="main"):
-				#going back to the caller
-				code[currentFunction].append([funcLoc[currentFunction][0],"BR", "0($sp)"])
-				updatefuncLoc(["0($sp)"])
 
 
 
