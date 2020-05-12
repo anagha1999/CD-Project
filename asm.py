@@ -6,16 +6,25 @@ mainStart = 100
 flag = 0 #to skip column names
 tVarRegEx = "^t\d+"
 IDRegEx = "^[A-Za-z_][A-Za-z0-9_]*"
-registers =[]
+
+registerDescriptor = {
+			'R1' : None, 'R2' : None, 'R3' : None, 'R4' : None, 'R5' : None, 'R11' : None, 
+			'R12' : None, 'R13' : None, 'R14' : None, 'R15' : None}
+freeRegisters = []
+for register in registerDescriptor.keys():
+	freeRegisters.append(register)
+busyRegisters = []
+
+#Registers for passing function parameters
 freeParamRegs =["R7", "R8", "R9", "R10"]
 busyParamRegs =[]
-funcLoc = dict() #key = name of the function, value = [ curr code area, startcode Area]
+funcLoc = dict() #key = name of the function, value = [curr code area, startcode Area]
 code =dict() #key = name of the function, value = assmebly code
 
 
 currentFunction ="main"
-funcStack=[]
-funcStack.append(currentFunction) #stack used to keep track of caller and callee functions
+#funcStack=[]
+#funcStack.append(currentFunction) #stack used to keep track of caller and callee functions
 startCodeArea = 100
 currCodeArea = 100
 
@@ -28,6 +37,27 @@ code["main"].append([funcLoc["main"][0], "LD", "$sp", "800"])
 funcLoc["main"][0]+=8
 code["main"].append([funcLoc["main"][0], "SUB", "$sp", "$sp", "20"])	
 funcLoc["main"][0]+=8
+
+def getRegister(temp):
+	for key in registerDescriptor:
+		if(registerDescriptor[key] == temp):
+			return key
+		
+
+	if len(freeRegisters) == 0:
+		register = busyRegisters.pop(0)
+		tempReg = registerDescriptor[register]
+		registerDescriptor[register] = temp
+		return register
+				
+
+	else:
+		register = freeRegisters.pop()
+		busyRegisters.append(register)
+		registerDescriptor[register] = temp
+		return register
+
+	
 
 def updatefuncLoc(arr):
 	funcLoc[currentFunction][0]+=4
@@ -48,17 +78,19 @@ with open('TAC.tsv') as csvfile:
 				#if result = temp variable
 				if(row[2].isdigit()):
 					#if you're moving a constant into a temp variable
-					code[currentFunction].append([funcLoc[currentFunction][0], "MOV", row[4], row[2]])
+					
+					code[currentFunction].append([funcLoc[currentFunction][0], "MOV", getRegister(row[4]), row[2]])
 					funcLoc[currentFunction][0]+=8
 					continue
 				else:
 					#you're loading some other variable value(from memory) into a temp variable
-					code[currentFunction].append([funcLoc[currentFunction][0], "LD", row[4], row[2]])
+					code[currentFunction].append([funcLoc[currentFunction][0], "LD", getRegister(row[4]), row[2]])
 					funcLoc[currentFunction][0]+=8
 					continue
 			if(re.search(IDRegEx, row[4])):
 				#if result = variable, you're storing a value in the memory
-				code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4], row[2]])
+				
+				code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4], getRegister(row[2])])
 				funcLoc[currentFunction][0]+=8
 
 				#adding to .data section + preventing repeat additions of the same variable
@@ -86,8 +118,17 @@ with open('TAC.tsv') as csvfile:
 			code[currentFunction].append([funcLoc[currentFunction][0],"DIV", row[4],row[2],row[3]])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "unary-"):
+			#correcting +ve value of num to -ve in code
 			currNum = code[currentFunction][-1][-1]
 			code[currentFunction][-1][-1] = "-"+currNum
+
+			#correcting +ve value of num to -ve in registerDescriptor
+			reg = code[currentFunction][-1][-2]
+			for key in registerDescriptor:
+				if(key == reg):
+					registerDescriptor[key] = row[4]
+					break
+
 		if(row[1]== "=[]"):
 			code[currentFunction].append([funcLoc[currentFunction][0],"MOV", row[4], row[3]+"("+row[2]+")"])
 			updatefuncLoc([row[4], row[3]+"("+row[2]+")"])
@@ -176,7 +217,7 @@ with open('TAC.tsv') as csvfile:
 			updatefuncLoc(["$sp", "$sp", "20"])
 
 		if(row[1]=="Print"):
-			code[currentFunction].append([funcLoc[currentFunction][0], "MOV", "R0", row[2]])
+			code[currentFunction].append([funcLoc[currentFunction][0], "MOV", "R0", getRegister(row[2])])
 			updatefuncLoc(["MOV", "R0", row[2]])
 			code[currentFunction].append([funcLoc[currentFunction][0], "SYSCALL"])
 			funcLoc[currentFunction][0]+=4

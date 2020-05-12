@@ -1,17 +1,10 @@
 Line No	Op	Arg1	Arg2	Res
-0	BeginF	abc	-	-
-1	=	a	-	t1
-2	=	b	-	t2
-3	+	t1	t2	t3
-4	=	t3	-	c
-5	EndF	abc	-	-
-6	=	5	-	t11
-7	=	t11	-	c
-8	=	c	-	t14
-9	Print	t14	-	-
-10	Param	3	-	-
-11	Param	 4	-	-
-12	Param	 c	-	-
-13	Call	abc	3	t21
-14	=	"new value:"	-	t22
-15	Print	t22	-	-
+0	=	3	-	t0
+1	=	t0	-	a
+2	=	4	-	t3
+3	unary-	t3	-	t5
+4	=	t5	-	b
+5	=	a	-	t8
+6	Print	t8	-	-
+7	=	b	-	t11
+8	Print	t11	-	-
