@@ -128,6 +128,14 @@ with open('TAC.tsv') as csvfile:
 		if(row[1] == "/"):
 			code[currentFunction].append([funcLoc[currentFunction][0],"DIV", row[4],row[2],row[3]])
 			updatefuncLoc([row[4],row[2],row[3]])
+		########## MY CHANGES #######################
+		if(row[1] == "and"):
+			code[currentFunction].append([funcLoc[currentFunction][0],"AND", row[4],row[2],row[3]])
+			updatefuncLoc([row[4],row[2],row[3]])
+		if(row[1] == "or"):
+			code[currentFunction].append([funcLoc[currentFunction][0],"OR", row[4],row[2],row[3]])
+			updatefuncLoc([row[4],row[2],row[3]])
+		######### MY CHANGES #########################
 		if(row[1] == "unary-"):
 			#correcting +ve value of num to -ve in code
 			currNum = code[currentFunction][-1][-1]
@@ -162,6 +170,7 @@ with open('TAC.tsv') as csvfile:
 		if(row[1] == "!="):
 			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BNE"])
 			updatefuncLoc([row[4], row[2], row[3]])
+
 		if(row[1] == "If False"):
 			for i in reversed(code[currentFunction]):
 				#reverse search to handle nested if-else's or nested loops
