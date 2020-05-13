@@ -4,7 +4,7 @@ y=2
 z =[1,2,3]
 
 for i in z:
-	print(x)
+	print(i)
 	x= x+1 
 
 for i in range(0,3):
@@ -21,3 +21,10 @@ else:
 
 while(x<=100):
 	x = x+2*3/4-1
+
+def sum(a,b):
+	c= a+b
+	return c
+
+z= sum(x,y)
+print(x)
