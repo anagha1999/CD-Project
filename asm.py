@@ -39,22 +39,33 @@ code["main"].append([funcLoc["main"][0], "SUB", "$sp", "$sp", "20"])
 funcLoc["main"][0]+=8
 
 def getRegister(temp):
+
 	for key in registerDescriptor:
 		if(registerDescriptor[key] == temp):
+			#print(registerDescriptor)
 			return key
 		
 
 	if len(freeRegisters) == 0:
-		register = busyRegisters.pop(0)
-		tempReg = registerDescriptor[register]
-		registerDescriptor[register] = temp
-		return register
+		try:
+			#print(busyRegisters)
+			register = busyRegisters.pop(0)
+			tempReg = registerDescriptor[register]
+			registerDescriptor[register] = temp
+			return register
+		except IndexError:
+			print("Cannot compile code. Architecture supports only 10 GPRs")
+			exit(0)
+			#print(registerDescriptor)
+
 				
 
 	else:
-		register = freeRegisters.pop()
+		register = freeRegisters.pop(0)
+		#print(busyRegisters)
 		busyRegisters.append(register)
 		registerDescriptor[register] = temp
+		#print(registerDescriptor)
 		return register
 
 	
@@ -106,7 +117,7 @@ with open('TAC.tsv') as csvfile:
 		if(row[1]=="ListDecl"):
 			code[".data"].append([row[4]+ ": "+ ".BLKW  " + row[2]])
 		if(row[1] == "+"):
-			code[currentFunction].append([funcLoc[currentFunction][0], "ADD", row[4],row[2],row[3]])
+			code[currentFunction].append([funcLoc[currentFunction][0], "ADD", getRegister(row[4]),getRegister(row[2]),getRegister(row[3])])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "binary-"):
 			code[currentFunction].append([funcLoc[currentFunction][0], "SUB", row[4],row[2],row[3]])
@@ -218,7 +229,7 @@ with open('TAC.tsv') as csvfile:
 
 		if(row[1]=="Print"):
 			code[currentFunction].append([funcLoc[currentFunction][0], "MOV", "R0", getRegister(row[2])])
-			updatefuncLoc(["MOV", "R0", row[2]])
+			updatefuncLoc(["MOV", "R0", getRegister(row[2])])
 			code[currentFunction].append([funcLoc[currentFunction][0], "SYSCALL"])
 			funcLoc[currentFunction][0]+=4
 

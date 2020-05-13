@@ -980,8 +980,10 @@ arith_exp :  term { $$=$1;}
 
 
 bool_exp : bool_term T_Or bool_term {$$ = make_node("or", "or", $1, $3);}
+		 | arith_exp T_Or arith_exp {$$ = make_node("or","or", $1, $3);}
          | arith_exp T_LT arith_exp {$$ = make_node("<", "<",$1, $3);}
          | bool_term T_And bool_term {$$ = make_node("and","and", $1, $3);}
+         | arith_exp T_And arith_exp {$$ = make_node("and","and", $1, $3);}
          | arith_exp T_GT arith_exp {$$ = make_node(">",">",$1, $3);}
          | arith_exp T_ELT arith_exp {$$ = make_node("<=","<=", $1, $3);}
          | arith_exp T_EGT arith_exp {$$ = make_node(">=",">=",$1, $3);}
@@ -995,7 +997,7 @@ bool_term : bool_factor {$$ = $1;}
           | T_False {insertRecord("Constant", "False", @1.first_line, currentScope); $$ = make_leaf("False", "Constant");}; 
           
 bool_factor : T_Not bool_factor {$$ = make_node("not", "not", make_leaf("", ""), $2);}
-            | T_OP bool_exp T_CP {$$ = $2;}; 
+            | T_OP bool_exp T_CP {$$ = $2;};
 
 import_stmt : T_Import T_ID {insertRecord("PackageName", $<text>2, @2.first_line, currentScope); 
 							  $$ = make_node("import", "import", make_leaf($<text>2, "PackageName"), make_leaf("", "") );};
