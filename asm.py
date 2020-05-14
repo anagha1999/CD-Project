@@ -40,66 +40,46 @@ funcLoc["main"][0]+=8
 
 
 def getRegister(temp,currRow):
-	print(registerDescriptor)
+	#print(registerDescriptor)
 
 	for key in registerDescriptor:
 		if(registerDescriptor[key] == temp):
-			#print(registerDescriptor)
 			return key
 		
 
 	if len(freeRegisters) == 0:
-		#print(registerDescriptor)
-		'''try:
-			#print(busyRegisters)
-			register = busyRegisters.pop(0)
-			tempReg = registerDescriptor[register]
-			registerDescriptor[register] = temp
-			return register
-
-		except IndexError:'''
-			#print("Cannot compile code. Architecture supports only 10 GPRs")
-			#implementing linear scan algorithm
-		foundCurrRow =0 
-		indexToReplace =0
+		foundCurrRow =0 #need to scan the code from current row onwards to find which register can be replaced
+		indexToReplace =0 #index of register in busyRegisters[] to replace with new value
 		with open('TAC.tsv', 'r') as tsvfile:
 			inp2 = csv.reader(tsvfile, delimiter='\t')
 			for row in inp2:
 				if(row == currRow):
-					foundCurrRow=1
-					#print(busyRegisters)
-					
-					#print(registerDescriptor)
-					#print(row)
-					
+					foundCurrRow=1					
 
 				if(foundCurrRow==1):
-					regToReplace = busyRegisters[indexToReplace]
-					tVarToReplace = registerDescriptor[regToReplace]
-					#print(regToReplace, tVarToReplace)
-					if(tVarToReplace in row):
-						indexToReplace+=1
+					try:
+						regToReplace = busyRegisters[indexToReplace] #part linked to 
+						tVarToReplace = registerDescriptor[regToReplace] #temp variable of register to replace
+						if(tVarToReplace in row):
+							indexToReplace+=1 #if the temp variable is used later in the code, you can't replace the register associated with it
+							#so find a new register
+					except:
+						#will probably occur when indexToReplace > len(busyRegisters)
+						#this means that no other register can afford to be replaced
+						print(sys.exc_info()[0])
+						print("Cannot compile code. Architecture supports only 10 GPRs")
+						exit(0)
 				else:
 					continue
 
-			try:
-				#busyRegisters.remove(regToReplace)
-				registerDescriptor[regToReplace] = temp
-				return regToReplace
-			except:
-				print(sys.exc_info()[0])
-				print("Cannot compile code. Architecture supports only 10 GPRs")
-				exit(0)
-			#print(registerDescriptor)
-
+			registerDescriptor[regToReplace] = temp 
+			return regToReplace
 				
 
 	else:
 		register = freeRegisters.pop(0)
-		#print(busyRegisters)
 		busyRegisters.append(register)
 		registerDescriptor[register] = temp
-		#print(registerDescriptor)
 		return register
 
 	
@@ -110,7 +90,52 @@ def updatefuncLoc(arr):
 		if(el.isdigit()):
 			funcLoc[currentFunction][0]+=4
 
+def getOpRegs(a1, a2, r, row):
+	#in case all the operands in a binary operation are not temp variables
+	#we need to add separate instructions to handle them
+	op1 = getRegister(a1, row)
+	op2 = getRegister(a2, row)
+	res = getRegister(r, row)
 
+	if(re.search(tVarRegEx,a1)):
+		#argument 1 is a temp variable
+		pass
+	elif(a1.isdigit()):
+		#if arg1 is a digit
+		code[currentFunction].append([funcLoc[currentFunction][0], "MOV", op1, a1])
+		funcLoc[currentFunction][0]+=8
+	else:
+		#if arg1 is an ID		
+		code[currentFunction].append([funcLoc[currentFunction][0], "LD", op1, a1])
+		funcLoc[currentFunction][0]+=8
+
+	if(re.search(tVarRegEx,a2)):
+		#argument 2 is a temp variable
+		pass
+	elif(a2.isdigit()):
+		#if arg2 is a digit
+		code[currentFunction].append([funcLoc[currentFunction][0], "MOV", op2, a2])
+		funcLoc[currentFunction][0]+=8
+	else:
+		#if arg2 is an ID
+		code[currentFunction].append([funcLoc[currentFunction][0], "LD", op2, a2])
+		funcLoc[currentFunction][0]+=8
+		
+
+	if(re.search(tVarRegEx,r)):
+		#r is a temp variable
+		pass		
+	elif(a2.isdigit()):
+		#if r is a digit
+		code[currentFunction].append([funcLoc[currentFunction][0], "MOV", res, r])
+		funcLoc[currentFunction][0]+=8
+	else:
+		#r is an ID 
+		code[currentFunction].append([funcLoc[currentFunction][0], "LD", res, r])
+		funcLoc[currentFunction][0]+=8
+		pass
+
+	return op1,op2,res
 
 with open('TAC.tsv') as csvfile:
 	inp = csv.reader(csvfile, delimiter='\t')
@@ -123,7 +148,6 @@ with open('TAC.tsv') as csvfile:
 				#if result = temp variable
 				if(row[2].isdigit()):
 					#if you're moving a constant into a temp variable
-					
 					code[currentFunction].append([funcLoc[currentFunction][0], "MOV", getRegister(row[4], row), row[2]])
 					funcLoc[currentFunction][0]+=8
 					continue
@@ -134,8 +158,11 @@ with open('TAC.tsv') as csvfile:
 					continue
 			if(re.search(IDRegEx, row[4])):
 				#if result = variable, you're storing a value in the memory
-				
-				code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4], getRegister(row[2], row)])
+				if(row[2].isdigit()):
+					code[currentFunction].append([funcLoc[currentFunction][0], "MOV", getRegister(row[2],row), row[2]])
+					code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4],  getRegister(row[2],row)])
+				else:
+					code[currentFunction].append([funcLoc[currentFunction][0], "ST", row[4], getRegister(row[2], row)])
 				funcLoc[currentFunction][0]+=8
 
 				#adding to .data section + preventing repeat additions of the same variable
@@ -151,44 +178,31 @@ with open('TAC.tsv') as csvfile:
 		if(row[1]=="ListDecl"):
 			code[".data"].append([row[4]+ ": "+ ".BLKW  " + row[2]])
 		if(row[1] == "+"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0], "ADD", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "binary-"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0], "SUB", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "*"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0],"MUL", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "/"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0],"DIV", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
-		########## MY CHANGES #######################
 		if(row[1] == "and"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0],"AND", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
 		if(row[1] == "or"):
-			op1 = getRegister(row[2], row)
-			op2 = getRegister(row[3], row)
-			res = getRegister(row[4], row)
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
 			code[currentFunction].append([funcLoc[currentFunction][0],"OR", res, op1, op2])
 			updatefuncLoc([row[4],row[2],row[3]])
-		######### MY CHANGES #########################
 		if(row[1] == "unary-"):
+			#the number would've been stored as +ve in the asm code and register descriptor
 			#correcting +ve value of num to -ve in code
 			currNum = code[currentFunction][-1][-1]
 			code[currentFunction][-1][-1] = "-"+currNum
@@ -201,26 +215,32 @@ with open('TAC.tsv') as csvfile:
 					break
 
 		if(row[1]== "=[]"):
-			code[currentFunction].append([funcLoc[currentFunction][0],"MOV", row[4], row[3]+"("+row[2]+")"])
+			code[currentFunction].append([funcLoc[currentFunction][0],"MOV", getRegister(row[4],row), row[3]+"("+row[2]+")"])
 			updatefuncLoc([row[4], row[3]+"("+row[2]+")"])
 		if(row[1]== "<"): 
-			#or row[1]== "<=" or row[1]= ">" or row[1] = ">=" or row)
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BGZ"])
+			op1,op2, res = getOpRegs(row[2].strip(),row[3].strip(),row[4].strip(),row)
+
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BGZ"])
 			updatefuncLoc([row[4], row[2], row[3]])
 		if(row[1]== "<="): 
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BGEZ"])
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BGEZ"])
 			updatefuncLoc([row[4], row[2], row[3]])
 		if(row[1]==">"):
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BLZ"])
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BLZ"])
 			updatefuncLoc([row[4], row[2], row[3]])
 		if(row[1]==">="):
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BLEZ"])
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BLEZ"])
 			updatefuncLoc([row[4], row[2], row[3]])
 		if(row[1] == "=="):
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BEQ"])
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BEQ"])
 			updatefuncLoc([row[4], row[2], row[3]])
 		if(row[1] == "!="):
-			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", row[4], row[2], row[3], "BNE"])
+			op1, op2, res = getOpRegs(row[2].strip(), row[3].strip(), row[4].strip(), row)
+			code[currentFunction].append([funcLoc[currentFunction][0],"IfFalse pending", "SUB", res, op1, op2, "BNE"])
 			updatefuncLoc([row[4], row[2], row[3]])
 
 		if(row[1] == "If False"):
@@ -228,7 +248,7 @@ with open('TAC.tsv') as csvfile:
 				#reverse search to handle nested if-else's or nested loops
 				if("IfFalse pending" in i):
 					i.remove("IfFalse pending")
-					code[currentFunction].append([funcLoc[currentFunction][0], i[-1], i[2], row[4]])
+					code[currentFunction].append([funcLoc[currentFunction][0], i[-1], i[2] , row[4]])
 					updatefuncLoc([i[-1], i[2], row[4]])
 					i.remove(i[-1])
 		if(row[1] == "Label"):
@@ -304,16 +324,35 @@ dataCode = code[".data"]
 code.pop(".data")
 print(".data")
 for line in dataCode:
-	print(line)
-
+	#print(line)
+	for el in line:
+		print(el)
+print()
 mainCode = code["main"]
 code.pop("main")
 print("main:")
 for line in mainCode:
-	print(line)
-
+	#print(line)
+	print(line[0], ":", end=" ")
+	print(line[1], end = " ")
+	#print(line[2:-1])
+	for el in line[2:-1]:
+		print(el, end = ", ")
+	if(line[2:-1]!=[]):
+		print(line[-1])
+	else:
+		print()
+print()
 for key in code:
 	print(key)
 	for line in code[key]:
-		print(line)
+		print(line[0], ":", end=" ")
+		print(line[1], end = " ")
+		#print(line[2:-1])
+		for el in line[2:-1]:
+			print(el, end = ", ")
+		if(line[2:-1]!=[]):
+			print(line[-1])
+		else:
+			print()
 #print(code)

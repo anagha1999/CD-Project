@@ -659,14 +659,16 @@
 		if(!strcmp(node->nodeType, "WHILE"))
 		{
 			int temp = lIndex;
-			ICG_main(node->child[0]);
 			printf("L%d: If False t%d goto L%d\n", lIndex, node->child[0]->tempNo, lIndex+1);
-			make_quad( "Label", "-", "-",makeStr(temp, 0));		
+			make_quad( "Label", "-", "-",makeStr(temp, 0));	
+			ICG_main(node->child[0]);
+				
 			make_quad("If False", makeStr(node->child[0]->tempNo, 1), "-",makeStr(temp+1, 0) );								
 			lIndex+=2;			
 			ICG_main(node->child[1]);
 			printf("goto L%d\n", temp);
 			make_quad("goto", "-", "-", makeStr(temp, 0));
+			//printf("\nHEREEE");
 			printf("L%d: ", temp+1);
 			make_quad("Label", "-", "-", makeStr(temp+1, 0)); 
 			lIndex = lIndex+2;
@@ -842,7 +844,7 @@
 				
 				for(j=i+1; j<qIndex; j++)
 				{
-					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0)&& (strcmp(temp_quad.Op,"Param")!=0) && (strcmp(temp_quad.Op,"Call")!=0) )
+					if( (strcmp(temp_quad.Op,all_quads[j].Op )==0) && (strcmp(temp_quad.A1,all_quads[j].A1 )==0) && (strcmp(temp_quad.A2,all_quads[j].A2 )==0) && (strcmp(temp_quad.Op,"Print")!=0)&& (strcmp(temp_quad.Op,"Param")!=0) && (strcmp(temp_quad.Op,"Call")!=0) && (strcmp(temp_quad.Op,"Label")!=0))
 					{
 						//check if the 2 quads have the same Op, A1 and A2
 						//Print stmts should be excluded to retain pgm logic
@@ -1006,21 +1008,24 @@ pass_stmt   : T_Pass {$$=make_leaf("pass", "pass");};
 break_stmt  : T_Break {$$=make_leaf("break", "break");};
 return_stmt : T_Return {$$=make_leaf("", "return");} | T_Return T_ID { char return_val[100]; strcpy(return_val, "return "); strcat(return_val, $<text>2); $$=make_leaf(return_val, "return");}; 
 
-assign_stmt : T_ID T_EQL arith_exp 
-			{
-			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
-			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
-			  }  
+assign_stmt : 
+			T_ID  T_EQL func_call
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
+			 }
+
 			 |T_ID T_EQL bool_exp 
 			 {
 			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
 			 	$$ = make_node("=","=", make_leaf($<text>1, "Identifier"), $3);
 			 }   
-			 |T_ID  T_EQL func_call
-			 {
-			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
-			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
-			 } 
+			 | 
+			 T_ID T_EQL arith_exp 
+			{
+			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
+			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
+			  }  
 			 |T_ID T_EQL list_stmt 
 			 {
 			 	insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);
@@ -1063,6 +1068,7 @@ for_stmt: T_For T_ID T_IN range_stmt T_Cln start_suite
 			}
 		 | T_For T_ID T_IN T_ID T_Cln start_suite {
 		 insertRecord("Identifier", $<text>2, @2.first_line, currentScope); 
+		 //printSTable();
 		 checkList($<text>4, @4.first_line, currentScope);
 		 $$ =make_node("FOR", "FOR", make_leaf($<text>4, "Identifier"), $6);} ; 
 
@@ -1088,7 +1094,7 @@ args_list : T_Comma T_ID {insertRecord("Identifier", $<text>2, @2.first_line, cu
 			| {addToList("",0); clearArgsList();};
 
 func_def : T_Def T_ID {insertRecord("Func_Name", $<text>2, @2.first_line, currentScope);} T_OP args
- T_CP T_Cln start_suite {printf("\nIn func_def start suite"); clearArgsList(); $$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2, "Func_Name"), $5, $8, make_leaf("",""));};
+ T_CP T_Cln start_suite {clearArgsList(); $$ = make_for_node("Func_def", "Func_Name", make_leaf($<text>2, "Func_Name"), $5, $8, make_leaf("",""));};
 
 list_stmt: T_OB T_CB { $$ = make_leaf("[]", ""); } 
 		 |	

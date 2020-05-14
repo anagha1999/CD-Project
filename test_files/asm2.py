@@ -1,4 +1,3 @@
-a=5
-b=6
-a=a or b
-print(a)
+lis =[1,2,3]
+for i in lis:
+	print(i)
