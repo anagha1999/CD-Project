@@ -1,12 +1,12 @@
 # CD-Project
-##Instructions to run:
+## Instructions to run:
 + ```./run.sh```
 + ```./a.out < test_files/test.py``` where _test.py_ is a test file of your choice in ```test_files/``` directory
 + this will generate optimized intermediate code
 + python3 asm.py 
 + this will generate the corresponding assembly code	
 
-##Following phases are included:
+## Following phases are included:
 + Lexical Analysis
 + Syntax Analysis/Parsing
 + Semantic Analysis/AST Generation
@@ -24,7 +24,7 @@
 	+ ```for i in range (n1,n2)```
 + Functions
 
-##References: 
+## References: 
 + https://github.com/Shruthi2512/C_compiler_front_end-
 + https://github.com/2020saurav/py-codegen/tree/master/src
 + https://github.com/luckysahani/Compiler-Assignment-3-and-4/tree/master/Ass4
