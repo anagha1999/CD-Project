@@ -1,8 +1,8 @@
 # VIDEO
 
-##Intro - shar
+## Intro - shar
 
-##Lexical Analysis  - aish
+## Lexical Analysis  - aish
  + removing comments 
  + handling indentation
 
@@ -10,10 +10,10 @@
  + grammar
  + symbol table
 
-##Semantic Analysis/AST Generation - shar
+## Semantic Analysis/AST Generation - shar
  + make node functions
 
-##Intermediate Code Generation (Three Address Code) - shar
+## Intermediate Code Generation (Three Address Code) - shar
  +  quads structure
  + talk about while loop
  + for loop:
