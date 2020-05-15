@@ -1,1 +1,36 @@
 Line No	Op	Arg1	Arg2	Res
+0	=	3	-	t0
+1	=	t0	-	x
+2	=	2	-	t3
+3	=	t3	-	y
+4	=	"str"	-	t6
+5	=	t6	-	z
+7	BeginF	check	-	-
+8	=	x	-	t16
+9	=	5	-	t17
+10	<	t16	t17	t18
+11	If False	t18	-	L0
+12	=	y	-	t19
+14	<	t19	t0	t21
+15	If False	t21	-	L1
+16	=	1000	-	t22
+17	=	t22	-	z
+18	=	"1"	-	t25
+19	Print	t25	-	-
+20	=	z	-	t28
+21	=	4	-	t29
+22	>	t28	t29	t30
+23	If False	t30	-	L2
+24	=	"big"	-	t31
+25	Print	t31	-	-
+26	=	"2"	-	t34
+27	Print	t34	-	-
+28	Label	-	-	L2
+29	Label	-	-	L1
+30	Label	-	-	L0
+31	EndF	check	-	-
+32	Param	x	-	-
+33	Param	 y	-	-
+34	Call	check	2	t57
+36	Print	t16	-	-
+38	Print	t19	-	-

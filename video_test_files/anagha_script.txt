@@ -1,0 +1,74 @@
+We've tried to handle the syntax as extensively as possible in our grammar.
+The first non terminal encountered would be Start Debugger which leads us to StartParse. This rule is the pillar which handles every line of the input python script. We've written rules for basic statements such as pass, break, import and the others that you see here. Other compound statements would include if, while and for. We have also handled function definitions.
+To take up an example, let's look at how we handle arithmetic expressions and assigning statements
+(explain)
+(explain difference between insertRecord, modifyRecord)
+StartParse : T_NL StartParse {$$=$2;}
+			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start","NewLine", $1, $4);} 
+			| finalStatements {$$=$1;};
+
+finalStatements : basic_stmt  
+				| cmpd_stmt 
+				| func_def 
+				;
+basic_stmt : pass_stmt {$$=$1;} 
+			| break_stmt {$$=$1;} 
+			| import_stmt {$$=$1;} 
+			| assign_stmt {$$=$1;} 
+			| arith_exp {$$=$1;} 
+			| bool_exp {$$=$1;} 
+			| print_stmt {$$=$1;}
+			| return_stmt {$$=$1;}
+			| func_call {$$=$1;} ; 
+
+cmpd_stmt : if_stmt {$$ = $1;} 
+			| while_stmt {$$ = $1;}
+			| for_stmt {$$ = $1;};
+
+term : T_ID { modifyRecordID("Identifier", $<text>1, @1.first_line, currentScope); 
+		$$ = make_leaf($<text>1,"Identifier");} 
+     | constant {$$ = $1;} 
+     | list_index {$$ = $1;};
+
+arith_exp :  term { $$=$1;}
+			| arith_exp  T_PL  arith_exp {$$ = make_node("+","+",$1, $3); }
+			| arith_exp  T_MN  arith_exp {$$ = make_node("binary-","binary-",$1, $3);}
+			| arith_exp  T_ML  arith_exp {$$ = make_node("*","*",$1, $3);}
+ 			| arith_exp  T_DV  arith_exp {$$ = make_node("/","/",$1, $3);}
+ 			| T_MN term {$$ = make_node("temp","unary-", make_leaf("-", ""), $2);}
+ 			| T_OP arith_exp T_CP {$$=$2;};
+
+assign_stmt : 
+			T_ID  T_EQL func_call
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
+			 }
+
+			 |T_ID T_EQL bool_exp 
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=","=", make_leaf($<text>1, "Identifier"), $3);
+			 }   
+			 | 
+			 T_ID T_EQL arith_exp 
+			{
+			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
+			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
+			  }  
+			 |T_ID T_EQL list_stmt 
+			 {
+			 	insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", "ListDecl", make_leaf($<text>1, "ListTypeID"), $3);
+			 } 
+
+			 ;
+
+
+symbol table 
+- we've used a hash table
+- example code demo
+- explain all columns
+- scope column
+- show two different types of declarations of 'z' and their entries in the symbol table
+- refer recording on phone lol
