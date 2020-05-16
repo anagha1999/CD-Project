@@ -10,7 +10,7 @@
 
 
 ## Syntax Analysis/Parsing - anagha
- + grammar 
+ + grammar (show picture of grammar file, talk about conflicts and minimization)
  + symbol table (diff variable types, last line/declared line, scope, hash table scheme)
 
 ## Semantic Analysis/AST Generation - shar

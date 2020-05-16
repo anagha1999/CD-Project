@@ -1,8 +1,4 @@
-We've tried to handle the syntax as extensively as possible in our grammar.
-The first non terminal encountered would be Start Debugger which leads us to StartParse. This rule is the pillar which handles every line of the input python script. We've written rules for basic statements such as pass, break, import and the others that you see here. Other compound statements would include if, while and for. We have also handled function definitions.
-To take up an example, let's look at how we handle arithmetic expressions and assigning statements
-(explain)
-(explain difference between insertRecord, modifyRecord)
+
 StartParse : T_NL StartParse {$$=$2;}
 			| finalStatements T_NL {resetDepth();} StartParse {$$ = make_node("Start","NewLine", $1, $4);} 
 			| finalStatements {$$=$1;};
@@ -39,11 +35,12 @@ arith_exp :  term { $$=$1;}
  			| T_OP arith_exp T_CP {$$=$2;};
 
 assign_stmt : 
-			T_ID  T_EQL func_call
-			 {
-			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
-			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
-			 }
+ 			T_ID T_EQL arith_exp 
+			{
+			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
+			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
+			  }  
+			
 
 			 |T_ID T_EQL bool_exp 
 			 {
@@ -51,24 +48,38 @@ assign_stmt :
 			 	$$ = make_node("=","=", make_leaf($<text>1, "Identifier"), $3);
 			 }   
 			 | 
-			 T_ID T_EQL arith_exp 
-			{
-			  insertRecord("Identifier", $<text>1, @1.first_line, currentScope); 
-			  $$=make_node("=","=",make_leaf($<text>1, "Identifier"),$3);
-			  }  
+			
 			 |T_ID T_EQL list_stmt 
 			 {
 			 	insertRecord("ListTypeID", $<text>1, @1.first_line, currentScope);
 			 	$$ = make_node("=", "ListDecl", make_leaf($<text>1, "ListTypeID"), $3);
 			 } 
+			 |
+			 T_ID  T_EQL func_call
+			 {
+			 	insertRecord("Identifier", $<text>1, @1.first_line, currentScope);
+			 	$$ = make_node("=", "=",make_leaf($<text>1, "Identifier"), $3);
+			 }
 
 			 ;
 
 
-symbol table 
-- we've used a hash table
-- example code demo
-- explain all columns
-- scope column
-- show two different types of declarations of 'z' and their entries in the symbol table
-- refer recording on phone lol
+typedef struct record
+	{
+		char *type;
+		char *name;
+		int decLineNo;
+		int lastUseLine;
+	} record;
+
+	typedef struct STable
+	{
+		int no;
+		int noOfElems;
+		int scope;
+		record *Elements;
+		int Parent;
+		
+	} STable;
+
+arrayScope

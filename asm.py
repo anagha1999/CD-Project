@@ -7,6 +7,8 @@ flag = 0 #to skip column names
 tVarRegEx = "^t\d+"
 IDRegEx = "^[A-Za-z_][A-Za-z0-9_]*"
 
+code =dict() #key = name of the function, value = assmebly code
+
 registerDescriptor = {
 			'R1' : None, 'R2' : None, 'R3' : None, 'R4' : None, 'R5' : None, 'R11' : None, 
 			'R12' : None, 'R13' : None, 'R14' : None, 'R15' : None}
@@ -18,8 +20,12 @@ busyRegisters = []
 #Registers for passing function parameters
 freeParamRegs =["R7", "R8", "R9", "R10"]
 busyParamRegs =[]
+
+
+
+
+
 funcLoc = dict() #key = name of the function, value = [curr code area, startcode Area]
-code =dict() #key = name of the function, value = assmebly code
 
 
 currentFunction ="main"
@@ -294,11 +300,12 @@ with open('TAC.tsv') as csvfile:
 			updatefuncLoc(["$sp", "$sp", "20"])
 
 			#store return value in AR of function being called
-			#return value = current location + 16 because
-			#8 bytes: ST instruction 
+			#return value = current location + 20 because
+			#12 bytes: ST instruction 
 			#8 bytes: BR instruction
-			code[currentFunction].append([funcLoc[currentFunction][0], "ST", "0($sp)", str(funcLoc[currentFunction][0]+16)])
-			updatefuncLoc(["0($sp)", str(funcLoc[currentFunction][0]+16)])
+			code[currentFunction].append([funcLoc[currentFunction][0], "ST", "0($sp)", str(funcLoc[currentFunction][0]+20)])
+			#updatefuncLoc(["0($sp)", str(funcLoc[currentFunction][0]+20)])
+			funcLoc[currentFunction][0]+=12
 
 			calledFuncLoc = str(funcLoc[row[2]][1]) 
 			code[currentFunction].append([funcLoc[currentFunction][0], "BR", calledFuncLoc])
@@ -338,7 +345,7 @@ for line in mainCode:
 	#print(line[2:-1])
 	for el in line[2:-1]:
 		print(el, end = ", ")
-	if(line[2:-1]!=[]):
+	if(line[1:-1]!=[]):
 		print(line[-1])
 	else:
 		print()
@@ -351,7 +358,7 @@ for key in code:
 		#print(line[2:-1])
 		for el in line[2:-1]:
 			print(el, end = ", ")
-		if(line[2:-1]!=[]):
+		if(line[1:-1]!=[]):
 			print(line[-1])
 		else:
 			print()

@@ -1,10 +1,11 @@
 # CD-Project
 ## Instructions to run:
 + ```./run.sh```
-+ ```./a.out < test_files/test.py``` where _test.py_ is a test file of your choice in ```test_files/``` directory
-+ this will generate optimized intermediate code
-+ python3 asm.py 
-+ this will generate the corresponding assembly code	
++ ```./a.out < test_files/test.py``` 
+	+ where _test.py_ is a test file of your choice in ```test_files/``` directory
+	+ this will generate optimized intermediate code
++ ```python3 asm.py ```
+	+ this will generate the corresponding assembly code	
 
 ## Following phases are included:
 + Lexical Analysis
