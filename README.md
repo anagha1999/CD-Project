@@ -1,4 +1,8 @@
 # CD-Project
+
+## Abstract
+This is a mini compiler built for Python in C. Further details are explained in the sub-sections below.
+
 ## Instructions to run:
 + ```./run.sh```
 + ```./a.out < test_files/test.py``` 
@@ -26,8 +30,9 @@
 + Functions
 
 ## References: 
++ https://github.com/Kadle11/Mini-Python-Compiler-in-Lex-and-Yacc
 + https://github.com/Shruthi2512/C_compiler_front_end-
 + https://github.com/2020saurav/py-codegen/tree/master/src
 + https://github.com/luckysahani/Compiler-Assignment-3-and-4/tree/master/Ass4
-+ https://github.com/Kadle11/Mini-Python-Compiler-in-Lex-and-Yacc
+
 			
